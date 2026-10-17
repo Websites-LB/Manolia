@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "manolia", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "C:/Users/user/Desktop/Gio/gb/manolia", "run", "dev"], "port": 3000 }
+  ]
+}
