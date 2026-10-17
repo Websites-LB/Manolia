@@ -2,21 +2,21 @@
 
 Website for Manolia, a floral boutique in Jbeil (Byblos), Lebanon: floral design, weddings and events.
 
-- **Home**: a single 3D water lily that opens as you scroll and, between chapters, folds and reopens in a new colour (blush, peach, butter, lilac, rose) while the page takes on a soft wash of the same tone.
+- **Home**: a hand-drawn-style 2D flower (canvas) that opens as you scroll and morphs, smoothly and continuously, from tulip to rose to lily to cosmos to peony, changing colour as it goes; the page takes on a soft wash of each flower's tone.
 - **Shop**: bouquets, boxes and vase arrangements with photographs; the bag sends the order to Manolia on WhatsApp.
 
 ## Stack
 
-Next.js 15 · React 19 · Tailwind CSS 4 · three.js · Radix UI · Framer Motion · Lenis · Zustand
+Next.js 15 · React 19 · Tailwind CSS 4 · Canvas 2D · Radix UI · Framer Motion · Lenis · Zustand
 
-## Flower engine (`src/lib/flora`)
+## Flower drawing (`src/lib/bloom`)
 
-The water lily is procedural: every petal blends between a bud pose and an open pose (morph targets on one
-instanced mesh), and its colour is two shader uniforms, so it can open and change colour live at 60 fps.
+Every flower is described with the same numbers (petal whorls, count, length, width, roundness, curl, tilt,
+colours, centre), so any two can be blended value by value. Scrolling picks the pair and the blend amount; the
+petals are laid out around the axis, sorted back to front and painted with gradient fills and fine ink lines.
 
 ## Credits
 
-- Lighting: [Brown Photostudio 02](https://polyhaven.com/a/brown_photostudio_02), Poly Haven, CC0
 - Shop photos: [Unsplash](https://unsplash.com) (free licence), stand-ins until Manolia's own photos
 
 ## Develop
