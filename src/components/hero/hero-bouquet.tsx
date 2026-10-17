@@ -64,10 +64,10 @@ export function HeroBouquet() {
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.5 : 1.75));
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
-      camera.fov = mobile ? 38 : 30;
+      camera.fov = mobile ? 34 : 30;
       // Desktop: bouquet sits right of centre so the copy can breathe on the left.
-      // Phone: it rises into the top half, above the copy.
-      if (mobile) camera.setViewOffset(w, h, 0, h * 0.25, w, h);
+      // Phone: the canvas is its own box above the copy, so the camera simply fits the whole arrangement in it.
+      if (mobile) camera.clearViewOffset();
       else camera.setViewOffset(w, h, -w * 0.17, 0, w, h);
       camera.updateProjectionMatrix();
       (motes.material as THREE.ShaderMaterial).uniforms.uPixel.value = h * renderer.getPixelRatio() * 0.5;
@@ -115,10 +115,19 @@ export function HeroBouquet() {
       bouquet.update(time, grow, bloom);
 
       const angle = lerp(-0.5, 0.55, p) + pointer.sx * 0.12 + Math.sin(time * 0.1) * 0.03;
-      const radius = lerp(1.5, 2.1, smooth(0.05, 0.95, p)) * (mobile ? 1.35 : 1);
-      const height = lerp(0.62, 1.0, p) - pointer.sy * 0.06;
+      let radius: number, height: number;
+      if (mobile) {
+        // distance that keeps vase foot to tallest bloom (~1.05 m) and the eucalyptus spread (~0.8 m) in frame
+        const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+        radius = Math.max(1.06 / (2 * t), 0.76 / (2 * t * camera.aspect));
+        height = lerp(0.62, 0.82, p);
+        lookAt.set(0, 0.45, 0);
+      } else {
+        radius = lerp(1.5, 2.1, smooth(0.05, 0.95, p));
+        height = lerp(0.62, 1.0, p) - pointer.sy * 0.06;
+        lookAt.set(0, lerp(0.5, 0.48, p), 0);
+      }
       camera.position.set(Math.sin(angle) * radius, height, Math.cos(angle) * radius);
-      lookAt.set(0, lerp(0.5, 0.48, p), 0);
       camera.lookAt(lookAt);
 
       const mm = motes.material as THREE.ShaderMaterial;
@@ -161,7 +170,8 @@ export function HeroBouquet() {
   return (
     <section ref={section} className="relative h-[560vh]" aria-label="Manolia — The Floral Boutique">
       <div className="sticky top-0 h-svh w-full overflow-hidden">
-        <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
+        {/* phone: the bouquet gets its own band under the header; desktop: full bleed behind the copy */}
+        <canvas ref={canvas} className="absolute inset-x-0 top-16 h-[min(50svh,calc(100svh-24rem))] w-full md:inset-0 md:h-full" />
 
         {/* veil while the studio loads */}
         <div
@@ -174,15 +184,16 @@ export function HeroBouquet() {
         </div>
 
         {/* soft gradient so copy stays legible over petals on small screens */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] bg-gradient-to-t from-cream via-cream/85 to-transparent md:inset-y-0 md:left-0 md:right-auto md:h-full md:w-[48%] md:bg-gradient-to-r md:via-cream/60" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[48%] bg-gradient-to-r from-cream via-cream/60 to-transparent md:block" />
 
-        <div className="absolute inset-0 z-10 mx-auto flex max-w-[1400px] items-end px-6 pb-16 md:items-center md:px-12 md:pb-0">
+        {/* phone: copy starts right under the bouquet band; desktop: vertically centred on the left */}
+        <div className="absolute inset-x-0 bottom-0 top-[calc(5rem+min(50svh,100svh-24rem))] z-10 mx-auto max-w-[1400px] px-6 md:inset-0 md:flex md:items-center md:px-12">
           <div className="relative w-full max-w-[34rem]">
             <Chapter refCb={ref(0)}>
               <p className="eyebrow">Floral design · Weddings · Events</p>
-              <h1 className="mt-5 font-display text-[clamp(4rem,11vw,9.5rem)] leading-[0.82] tracking-[-0.02em] text-forest">Manolia</h1>
-              <p className="font-script mt-1 text-[clamp(1.8rem,3.4vw,2.8rem)] text-forest/80">The Floral Boutique</p>
-              <p className="mt-6 max-w-sm text-[0.95rem] leading-relaxed text-ink/70">
+              <h1 className="mt-5 font-display text-[clamp(3.4rem,11vw,9.5rem)] leading-[0.82] tracking-[-0.02em] text-forest">Manolia</h1>
+              <p className="font-script mt-1 text-[clamp(1.6rem,3.4vw,2.8rem)] text-forest/80">The Floral Boutique</p>
+              <p className="mt-4 max-w-sm text-[0.92rem] leading-relaxed text-ink/70 md:mt-6 md:text-[0.95rem]">
                 Flowers composed by hand in the old town of Jbeil, Byblos.
               </p>
               <ScrollCue />
@@ -216,7 +227,7 @@ export function HeroBouquet() {
               <p className="eyebrow">Visit the boutique</p>
               <h2 className="chapter-title">Come in and smell them.</h2>
               <p className="chapter-body">{SITE.address}</p>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-6 flex flex-wrap gap-2.5 md:mt-8 md:gap-3">
                 <Link href="/shop" className="btn-primary">
                   Shop bouquets
                 </Link>
@@ -244,7 +255,7 @@ export function HeroBouquet() {
 
 function Chapter({ refCb, children }: { refCb: (n: HTMLDivElement | null) => void; children: React.ReactNode }) {
   return (
-    <div ref={refCb} className="absolute bottom-0 left-0 w-full opacity-0 will-change-transform md:bottom-auto md:top-0">
+    <div ref={refCb} className="absolute left-0 top-0 w-full opacity-0 will-change-transform">
       <div className="md:-translate-y-1/2">{children}</div>
     </div>
   );
@@ -252,7 +263,7 @@ function Chapter({ refCb, children }: { refCb: (n: HTMLDivElement | null) => voi
 
 function ScrollCue() {
   return (
-    <div className="mt-12 flex items-center gap-3 text-[0.7rem] uppercase tracking-[0.3em] text-forest/60">
+    <div className="mt-7 flex items-center gap-3 text-[0.7rem] md:mt-12 uppercase tracking-[0.3em] text-forest/60">
       <span className="relative block h-10 w-px overflow-hidden bg-forest/15">
         <span className="absolute inset-x-0 top-0 block h-1/2 animate-[cue_2.4s_ease-in-out_infinite] bg-forest/70" />
       </span>

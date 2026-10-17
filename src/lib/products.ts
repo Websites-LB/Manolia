@@ -10,26 +10,19 @@ export type Product = {
   price: number;
   blurb: string;
   stems: string;
-  recipe: Recipe;
+  /**
+   * Unsplash photo id (free licence), hotlinked from images.unsplash.com as Unsplash asks.
+   * Stand-ins until Manolia's own product photos replace them.
+   */
+  photo: string;
 };
 
 export const CATEGORIES: { id: Category | "all"; label: string }[] = [
   { id: "all", label: "All" },
   { id: "bouquets", label: "Hand-tied" },
-  { id: "boxes", label: "Hat boxes" },
+  { id: "boxes", label: "Boxes" },
   { id: "vases", label: "In a vase" },
 ];
-
-const BLUSH = "#f2c9c4";
-const IVORY = "#f6efe2";
-const ROSE = "#e9a3a6";
-const CRIMSON = "#8e1b2c";
-const PEACH = "#f3c19d";
-const LILAC = "#c9b3d9";
-const HYD_BLUE = "#7f9fd4";
-const HYD_WHITE = "#eef1ea";
-const PEONY_PINK = "#f0a9b9";
-const PEONY_CORAL = "#f08b7d";
 
 export const PRODUCTS: Product[] = [
   {
@@ -37,83 +30,96 @@ export const PRODUCTS: Product[] = [
     name: "Jbeil Morning",
     category: "bouquets",
     price: 65,
-    blurb: "Blush garden roses, a cloud of baby's breath and silver eucalyptus, wrapped in kraft and ivory tissue.",
-    stems: "Garden roses · gypsophila · eucalyptus",
-    recipe: { container: "wrap", seed: 3, roses: [BLUSH, BLUSH, IVORY, BLUSH, ROSE, IVORY, BLUSH], babys: 10, eucalyptus: 5 },
+    blurb: "Soft pink roses with waxflower and silver eucalyptus, loosely tied and wrapped in ivory paper.",
+    stems: "Roses · waxflower · eucalyptus",
+    photo: "1533793241176-a270e75ef2ad",
   },
   {
     id: "old-souk",
     name: "Old Souk",
     category: "bouquets",
     price: 85,
-    blurb: "Coral and pink peonies with peach roses — warm as stone walls at golden hour.",
-    stems: "Peonies · roses · eucalyptus",
-    recipe: { container: "wrap", seed: 11, peonies: [PEONY_CORAL, PEONY_PINK, PEONY_PINK], roses: [PEACH, PEACH, IVORY, PEACH], eucalyptus: 6, babys: 4 },
-  },
-  {
-    id: "harbour-blue",
-    name: "Harbour Blue",
-    category: "bouquets",
-    price: 90,
-    blurb: "Blue and white hydrangea with ivory roses, after the sea below the citadel.",
-    stems: "Hydrangea · roses · gypsophila",
-    recipe: { container: "wrap", seed: 21, hydrangeas: [HYD_BLUE, HYD_WHITE], roses: [IVORY, IVORY, IVORY, IVORY], babys: 8, eucalyptus: 3 },
+    blurb: "An armful of pink peonies in kraft paper, warm as stone walls at golden hour.",
+    stems: "Peonies · kraft wrap",
+    photo: "1560583035-79c3e11ae176",
   },
   {
     id: "first-dance",
     name: "First Dance",
     category: "bouquets",
     price: 120,
-    blurb: "Our bridal signature: ivory roses and white peonies, softly loose, finished with silk ribbon.",
-    stems: "Bridal · roses · peonies",
-    recipe: { container: "wrap", seed: 33, roses: [IVORY, IVORY, IVORY, IVORY, IVORY], peonies: [IVORY, "#fbe7e4"], babys: 12, eucalyptus: 4 },
+    blurb: "Our bridal signature: ivory garden roses, white blooms and trailing greenery, finished with silk ribbon.",
+    stems: "Bridal · garden roses · greenery",
+    photo: "1578534102052-70f4c14ee0e7",
+  },
+  {
+    id: "lavender-hour",
+    name: "Lavender Hour",
+    category: "bouquets",
+    price: 90,
+    blurb: "A dense dome of lavender roses, wrapped in white: a quiet palette for evenings.",
+    stems: "Lavender roses",
+    photo: "1609338682700-ea188bcdfa85",
   },
   {
     id: "velvet-box",
     name: "Velvet",
     category: "boxes",
     price: 95,
-    blurb: "Deep crimson roses set tight in our forest-green hat box with a gold rim.",
-    stems: "Red roses · hat box",
-    recipe: { container: "box", seed: 5, roses: Array(13).fill(CRIMSON) },
+    blurb: "Deep red roses packed tight in a round keepsake box. The classic, done properly.",
+    stems: "Red roses · keepsake box",
+    photo: "1548094967-e25a127d1f6d",
   },
   {
     id: "blush-box",
     name: "Blush",
     category: "boxes",
     price: 85,
-    blurb: "Blush and ivory roses with tufts of baby's breath, packed by hand in our signature box.",
-    stems: "Roses · gypsophila · hat box",
-    recipe: { container: "box", seed: 8, roses: [BLUSH, IVORY, BLUSH, ROSE, BLUSH, IVORY, BLUSH, IVORY, BLUSH, ROSE, BLUSH], babys: 5 },
+    blurb: "Pale pink roses in our black hat box, tied with a silk ribbon and a handwritten tag.",
+    stems: "Pink roses · hat box",
+    photo: "1771085417618-c69f6209e540",
   },
   {
-    id: "lilac-box",
-    name: "Lavender Hour",
-    category: "boxes",
-    price: 105,
-    blurb: "Lilac roses and a single blue hydrangea, a quiet palette for evenings.",
-    stems: "Lilac roses · hydrangea · hat box",
-    recipe: { container: "box", seed: 13, roses: [LILAC, LILAC, LILAC, IVORY, LILAC, LILAC, LILAC, IVORY], hydrangeas: [HYD_BLUE], babys: 3 },
+    id: "harbour-blue",
+    name: "Harbour Blue",
+    category: "vases",
+    price: 110,
+    blurb: "Blue hydrangea heads gathered close, after the sea below the citadel.",
+    stems: "Hydrangea",
+    photo: "1613916107413-4991c04f0837",
   },
   {
     id: "maison",
     name: "Maison",
     category: "vases",
     price: 140,
-    blurb: "A tall, generous arrangement in a hand-glazed antique ceramic vase. Yours to keep.",
-    stems: "Peonies · roses · hydrangea · vase",
-    recipe: { container: "vase", seed: 41, roses: [BLUSH, IVORY, BLUSH, ROSE, IVORY, BLUSH, IVORY, ROSE], peonies: [PEONY_PINK, IVORY, PEONY_PINK], hydrangeas: [HYD_WHITE, HYD_WHITE], babys: 14, eucalyptus: 7 },
+    blurb: "Blush peonies arranged loose and tall in a glass vase. Yours to keep.",
+    stems: "Peonies · glass vase",
+    photo: "1616148037989-4c3a9946a514",
   },
   {
     id: "citadel",
     name: "Citadel",
     category: "vases",
-    price: 160,
-    blurb: "Blue hydrangea, ivory peonies and roses: the palette of our evening events, for your table.",
-    stems: "Hydrangea · peonies · roses · vase",
-    recipe: { container: "vase", seed: 52, hydrangeas: [HYD_BLUE, HYD_BLUE, HYD_WHITE, HYD_BLUE], peonies: [IVORY, IVORY], roses: [IVORY, IVORY, IVORY, IVORY, IVORY, IVORY], babys: 12, eucalyptus: 7 },
+    price: 75,
+    blurb: "A few stems of violet-blue hydrangea in a simple glass vase, for a desk or a bedside.",
+    stems: "Hydrangea · glass vase",
+    photo: "1585738460883-62b4205281bf",
   },
 ];
+
+/** Builds a sized, cropped Unsplash URL for a product photo. */
+export const photoUrl = (id: string, width: number) =>
+  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&h=${Math.round(width * 1.25)}&q=80`;
+
+const BLUSH = "#f2c9c4";
+const IVORY = "#f6efe2";
+const ROSE = "#e9a3a6";
+const PEACH = "#f3c19d";
+const HYD_BLUE = "#7f9fd4";
+const HYD_WHITE = "#eef1ea";
+const PEONY_PINK = "#f0a9b9";
+const PEONY_CORAL = "#f08b7d";
 
 /** The hero's signature arrangement. */
 export const HERO_RECIPE: Recipe = {

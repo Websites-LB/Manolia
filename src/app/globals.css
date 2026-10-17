@@ -22,6 +22,10 @@
     from { transform: translateX(0); }
     to { transform: translateX(-33.333%); }
   }
+  @keyframes settle {
+    from { transform: scale(1.06); }
+    to { transform: scale(1); }
+  }
   @keyframes rise {
     from { opacity: 0; transform: translateY(18px); }
     to { opacity: 1; transform: none; }
@@ -106,6 +110,11 @@
   .btn-ghost:hover {
     background: color-mix(in oklab, var(--color-forest) 7%, transparent);
     border-color: var(--color-forest);
+  }
+  @media (max-width: 767px) {
+    .chapter-title { margin-top: 0.9rem; font-size: clamp(2rem, 8.6vw, 2.5rem); line-height: 1.02; }
+    .chapter-body { margin-top: 0.9rem; font-size: 0.92rem; line-height: 1.65; }
+    .btn-primary, .btn-ghost { padding: 0.8rem 1.25rem; font-size: 0.7rem; letter-spacing: 0.16em; }
   }
   .hairline { border-color: color-mix(in oklab, var(--color-forest) 14%, transparent); }
   /* paper grain over everything, so flat cream reads as stock, not screen */

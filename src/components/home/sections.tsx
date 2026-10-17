@@ -19,7 +19,7 @@ const SERVICES = [
   },
   {
     title: "Bouquets & boxes",
-    body: "Hand-tied every morning and wrapped in kraft and silk, or set in our forest-green hat boxes.",
+    body: "Hand-tied every morning and wrapped in kraft and silk, or set in our keepsake hat boxes.",
     href: "/shop",
   },
   {
