@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
-import { Bouquet } from "@/lib/flora/bouquet";
+import { WaterLily } from "@/lib/flora/lily";
 import { createMotes, createRenderer, createStage, loadEnvironment } from "@/lib/flora/stage";
-import { HERO_RECIPE } from "@/lib/products";
 import { SITE, waLink } from "@/lib/site";
 
 const smooth = (a: number, b: number, x: number) => {
@@ -23,9 +22,29 @@ const CHAPTERS: [number, number][] = [
   [0.62, 0.79],
   [0.84, 1.01],
 ];
+/** The flower changes colour in the quiet gap between two chapters. */
+const TURNS = CHAPTERS.slice(1).map(([a], i) => (CHAPTERS[i][1] + a) / 2);
 
-export function HeroBouquet() {
+/**
+ * One palette per chapter. The petal colours are true to real water lilies; the page only borrows a
+ * whisper of each (glow/bg stay within a few percent of the house cream) so it reads as light, not paint.
+ */
+const PALETTES = [
+  { tip: "#e27a98", base: "#fff3f2", glow: "#f6dde2", bg: "#f4ece8" }, // blush
+  { tip: "#ef9467", base: "#fff2e4", glow: "#f8e2d0", bg: "#f5ede3" }, // peach
+  { tip: "#ecbd3f", base: "#fffae6", glow: "#f5ebc7", bg: "#f4efe0" }, // butter
+  { tip: "#b48ad2", base: "#fbf5ff", glow: "#ebe1f2", bg: "#f2ecee" }, // lilac
+  { tip: "#d9607d", base: "#fff1f1", glow: "#f4d9df", bg: "#f3ede3" }, // rose, settling back to house cream
+].map((p) => ({
+  tip: new THREE.Color(p.tip),
+  base: new THREE.Color(p.base),
+  glow: new THREE.Color(p.glow),
+  bg: new THREE.Color(p.bg),
+}));
+
+export function HeroBloom() {
   const section = useRef<HTMLElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const chapters = useRef<(HTMLDivElement | null)[]>([]);
   const counter = useRef<HTMLSpanElement>(null);
@@ -34,39 +53,46 @@ export function HeroBouquet() {
 
   useEffect(() => {
     const el = canvas.current!;
-    const renderer = createRenderer(el);
-    const { scene } = createStage();
-    const motes = createMotes();
+    const renderer = createRenderer(el, { alpha: true });
+    renderer.setClearColor(0x000000, 0);
+    const { scene, key } = createStage(null);
+    key.shadow.camera.left = key.shadow.camera.bottom = -0.35;
+    key.shadow.camera.right = key.shadow.camera.top = 0.35;
+    key.shadow.camera.updateProjectionMatrix();
+    const motes = createMotes(90);
+    motes.scale.setScalar(0.35);
+    motes.position.set(0, -0.05, 0);
     scene.add(motes);
-    const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 20);
-    const bouquet = new Bouquet(HERO_RECIPE);
-    scene.add(bouquet.root);
+    const camera = new THREE.PerspectiveCamera(30, 1, 0.02, 10);
+    const lily = new WaterLily();
+    scene.add(lily.root);
 
     const clock = new THREE.Clock();
     let disposed = false;
     let loadedAt = -1;
-    Promise.all([loadEnvironment(renderer), bouquet.ready]).then(([env]) => {
-      if (disposed) return;
-      scene.environment = env;
-      scene.environmentIntensity = 0.55;
-      loadedAt = clock.elapsedTime;
-      setLoaded(true);
-    }).catch((e) => {
-      console.error("[hero] studio failed to load", e);
-      setLoaded(true);
-    });
+    loadEnvironment(renderer)
+      .then((env) => {
+        if (disposed) return;
+        scene.environment = env;
+        scene.environmentIntensity = 0.6;
+      })
+      .catch((e) => console.error("[hero] light map failed to load", e))
+      .finally(() => {
+        if (disposed) return;
+        loadedAt = clock.elapsedTime;
+        setLoaded(true);
+      });
 
     let w = 0, h = 0, mobile = false;
     const resize = () => {
       w = el.clientWidth;
       h = el.clientHeight;
       mobile = w < 768;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.5 : 1.75));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.75 : 1.75));
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.fov = mobile ? 34 : 30;
-      // Desktop: bouquet sits right of centre so the copy can breathe on the left.
-      // Phone: the canvas is its own box above the copy, so the camera simply fits the whole arrangement in it.
+      // Desktop: the flower sits right of centre so the copy can breathe on the left.
       if (mobile) camera.clearViewOffset();
       else camera.setViewOffset(w, h, -w * 0.17, 0, w, h);
       camera.updateProjectionMatrix();
@@ -94,6 +120,7 @@ export function HeroBouquet() {
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
     io.observe(el);
 
+    const tip = new THREE.Color(), base = new THREE.Color(), glow = new THREE.Color(), bg = new THREE.Color();
     const lookAt = new THREE.Vector3();
     let raf = 0;
     const frame = () => {
@@ -102,39 +129,55 @@ export function HeroBouquet() {
       // real elapsed time, so scroll-follow keeps pace even when a slow device drops frames
       const dt = Math.min(clock.getDelta(), 0.5);
       const time = clock.elapsedTime;
-      const target = scrollProgress();
-      progress += (target - progress) * (1 - Math.exp(-dt * 5));
+      progress += (scrollProgress() - progress) * (1 - Math.exp(-dt * 5));
       pointer.sx += (pointer.x - pointer.sx) * (1 - Math.exp(-dt * 3));
       pointer.sy += (pointer.y - pointer.sy) * (1 - Math.exp(-dt * 3));
       const p = progress;
 
-      // on arrival the first stems rise out of the vase by themselves; scrolling carries them the rest of the way
-      const intro = loadedAt < 0 ? 0 : smooth(0.3, 4.2, time - loadedAt);
-      const grow = Math.max(0.46 * intro, smooth(0.0, 0.5, p));
-      const bloom = smooth(0.26, 0.82, p);
-      bouquet.update(time, grow, bloom);
+      // colour: drift to the next palette across each turn
+      let k = 0;
+      for (const c of TURNS) k += smooth(c - 0.045, c + 0.045, p);
+      const i0 = Math.min(PALETTES.length - 1, Math.floor(k));
+      const i1 = Math.min(PALETTES.length - 1, i0 + 1);
+      const f = k - i0;
+      tip.lerpColors(PALETTES[i0].tip, PALETTES[i1].tip, f);
+      base.lerpColors(PALETTES[i0].base, PALETTES[i1].base, f);
+      glow.lerpColors(PALETTES[i0].glow, PALETTES[i1].glow, f);
+      bg.lerpColors(PALETTES[i0].bg, PALETTES[i1].bg, f);
+      lily.setPalette(tip, base);
 
-      const angle = lerp(-0.5, 0.55, p) + pointer.sx * 0.12 + Math.sin(time * 0.1) * 0.03;
-      let radius: number, height: number;
+      // opening: a bud that unfurls on arrival, opens fully with the first scroll, then folds a little
+      // and reopens at every turn — the moment its colour changes, like the time-lapse it's drawn from
+      const intro = loadedAt < 0 ? 0 : smooth(0.2, 3.5, time - loadedAt);
+      let fold = 0;
+      for (const c of TURNS) fold = Math.max(fold, Math.exp(-Math.pow((p - c) / 0.04, 2)));
+      const open = Math.max(0.28 * intro, smooth(0.0, 0.14, p)) * (1 - 0.42 * fold);
+      lily.update(time, open);
+
+      // camera: from water level, rising to look into the open flower
+      const angle = lerp(-0.35, 0.4, p) + pointer.sx * 0.1 + Math.sin(time * 0.1) * 0.02;
+      const elev = lerp(0.32, 0.72, smooth(0, 0.3, p)) - pointer.sy * 0.05;
+      let radius: number;
       if (mobile) {
-        // distance that keeps vase foot to tallest bloom (~1.05 m) and the eucalyptus spread (~0.8 m) in frame
         const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-        radius = Math.max(1.06 / (2 * t), 0.76 / (2 * t * camera.aspect));
-        height = lerp(0.62, 0.82, p);
-        lookAt.set(0, 0.45, 0);
+        radius = Math.max(0.3 / (2 * t), 0.46 / (2 * t * camera.aspect));
       } else {
-        radius = lerp(1.5, 2.1, smooth(0.05, 0.95, p));
-        height = lerp(0.62, 1.0, p) - pointer.sy * 0.06;
-        lookAt.set(0, lerp(0.5, 0.48, p), 0);
+        radius = lerp(0.74, 0.84, p);
       }
-      camera.position.set(Math.sin(angle) * radius, height, Math.cos(angle) * radius);
+      camera.position.set(Math.sin(angle) * Math.cos(elev) * radius, Math.sin(elev) * radius, Math.cos(angle) * Math.cos(elev) * radius);
+      lookAt.set(0, 0.035 - 0.015 * smooth(0, 0.3, p), 0);
       camera.lookAt(lookAt);
 
       const mm = motes.material as THREE.ShaderMaterial;
       mm.uniforms.uTime.value = time;
-      mm.uniforms.uOpacity.value = 0.4 + bloom * 0.6;
+      mm.uniforms.uOpacity.value = 0.35 + open * 0.4;
 
       renderer.render(scene, camera);
+
+      // the page breathes the same colour: a soft glow behind the flower over a barely tinted cream
+      const st = stage.current!.style;
+      st.setProperty("--hero-bg", `#${bg.getHexString()}`);
+      st.setProperty("--hero-glow", `#${glow.getHexString()}`);
 
       chapters.current.forEach((node, i) => {
         if (!node) return;
@@ -158,7 +201,7 @@ export function HeroBouquet() {
       ro.disconnect();
       io.disconnect();
       window.removeEventListener("pointermove", onMove);
-      bouquet.dispose();
+      lily.dispose();
       renderer.dispose();
     };
   }, []);
@@ -169,8 +212,12 @@ export function HeroBouquet() {
 
   return (
     <section ref={section} className="relative h-[560vh]" aria-label="Manolia — The Floral Boutique">
-      <div className="sticky top-0 h-svh w-full overflow-hidden">
-        {/* phone: the bouquet gets its own band under the header; desktop: full bleed behind the copy */}
+      <div
+        ref={stage}
+        className="hero-stage sticky top-0 h-svh w-full overflow-hidden"
+        style={{ "--hero-bg": "#f4ece8", "--hero-glow": "#f6dde2" } as React.CSSProperties}
+      >
+        {/* phone: the flower gets its own band under the header; desktop: full bleed behind the copy */}
         <canvas ref={canvas} className="absolute inset-x-0 top-16 h-[min(50svh,calc(100svh-24rem))] w-full md:inset-0 md:h-full" />
 
         {/* veil while the studio loads */}
@@ -183,10 +230,7 @@ export function HeroBouquet() {
           </div>
         </div>
 
-        {/* soft gradient so copy stays legible over petals on small screens */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[48%] bg-gradient-to-r from-cream via-cream/60 to-transparent md:block" />
-
-        {/* phone: copy starts right under the bouquet band; desktop: vertically centred on the left */}
+        {/* phone: copy starts right under the flower band; desktop: vertically centred on the left */}
         <div className="absolute inset-x-0 bottom-0 top-[calc(5rem+min(50svh,100svh-24rem))] z-10 mx-auto max-w-[1400px] px-6 md:inset-0 md:flex md:items-center md:px-12">
           <div className="relative w-full max-w-[34rem]">
             <Chapter refCb={ref(0)}>
@@ -216,10 +260,10 @@ export function HeroBouquet() {
             </Chapter>
 
             <Chapter refCb={ref(3)}>
-              <p className="eyebrow">Hand-tied daily</p>
-              <h2 className="chapter-title">Garden roses, peonies and hydrangea, fresh every morning.</h2>
+              <p className="eyebrow">Fresh every morning</p>
+              <h2 className="chapter-title">Every season brings its own colours.</h2>
               <p className="chapter-body">
-                Each bouquet is tied to order and never repeated exactly. Tell us who it&apos;s for and we&apos;ll choose the stems that suit them.
+                Garden roses, peonies, hydrangea, lilies: we work with what is at its best this week, and tie every bouquet to order. Tell us who it&apos;s for and we&apos;ll choose the stems that suit them.
               </p>
             </Chapter>
 
@@ -263,7 +307,7 @@ function Chapter({ refCb, children }: { refCb: (n: HTMLDivElement | null) => voi
 
 function ScrollCue() {
   return (
-    <div className="mt-7 flex items-center gap-3 text-[0.7rem] md:mt-12 uppercase tracking-[0.3em] text-forest/60">
+    <div className="mt-7 flex items-center gap-3 text-[0.7rem] uppercase tracking-[0.3em] text-forest/60 md:mt-12">
       <span className="relative block h-10 w-px overflow-hidden bg-forest/15">
         <span className="absolute inset-x-0 top-0 block h-1/2 animate-[cue_2.4s_ease-in-out_infinite] bg-forest/70" />
       </span>

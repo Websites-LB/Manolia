@@ -1,5 +1,3 @@
-import type { Recipe } from "./flora/bouquet";
-
 export type Category = "bouquets" | "boxes" | "vases";
 
 export type Product = {
@@ -112,22 +110,3 @@ export const PRODUCTS: Product[] = [
 export const photoUrl = (id: string, width: number) =>
   `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&h=${Math.round(width * 1.25)}&q=80`;
 
-const BLUSH = "#f2c9c4";
-const IVORY = "#f6efe2";
-const ROSE = "#e9a3a6";
-const PEACH = "#f3c19d";
-const HYD_BLUE = "#7f9fd4";
-const HYD_WHITE = "#eef1ea";
-const PEONY_PINK = "#f0a9b9";
-const PEONY_CORAL = "#f08b7d";
-
-/** The hero's signature arrangement. */
-export const HERO_RECIPE: Recipe = {
-  container: "vase",
-  seed: 9,
-  roses: [BLUSH, IVORY, BLUSH, ROSE, IVORY, BLUSH, PEACH, IVORY, BLUSH, ROSE],
-  peonies: [PEONY_PINK, IVORY, PEONY_PINK, PEONY_CORAL],
-  hydrangeas: [HYD_WHITE, HYD_BLUE, HYD_BLUE],
-  babys: 18,
-  eucalyptus: 8,
-};

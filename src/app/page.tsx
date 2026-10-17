@@ -1,10 +1,10 @@
 import { Services, Signatures, StemsBand, Visit } from "@/components/home/sections";
-import { HeroBouquet } from "@/components/hero/hero-bouquet";
+import { HeroBloom } from "@/components/hero/hero-bloom";
 
 export default function Home() {
   return (
     <>
-      <HeroBouquet />
+      <HeroBloom />
       <Services />
       <Signatures />
       <StemsBand />

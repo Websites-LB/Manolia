@@ -154,3 +154,17 @@
   }
   .qty:hover { background: color-mix(in oklab, var(--color-forest) 6%, transparent); }
 }
+
+/* hero: a barely tinted cream with a soft glow of the flower's own colour behind it */
+.hero-stage {
+  background:
+    radial-gradient(ellipse 60% 55% at 50% 34%, var(--hero-glow), transparent 72%),
+    var(--hero-bg);
+}
+@media (min-width: 768px) {
+  .hero-stage {
+    background:
+      radial-gradient(ellipse 42% 62% at 67% 52%, var(--hero-glow), transparent 74%),
+      var(--hero-bg);
+  }
+}
