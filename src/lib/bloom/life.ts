@@ -1,9 +1,9 @@
 import { css, mixRgb, shade, type Rgb } from "./kinds";
 
 /**
- * Small living things for the illustration: butterflies that wander, glide, sometimes land on the
- * flower and shy away from the cursor, and petals that drift down. Drawn in the same flat,
- * fine-ink style as the flower. Everything works in CSS pixels on a 2D canvas.
+ * Small living things for the illustration: a butterfly that now and then drifts across the page,
+ * and petals that fall from the flower. Drawn in the same flat, fine-ink style as the flower.
+ * Everything works in CSS pixels on a 2D canvas.
  */
 
 type Wing = { fore: Rgb; hind: Rgb; edge: Rgb; spot: Rgb };
@@ -20,144 +20,71 @@ const WINGS: Wing[] = [
 const TAU = Math.PI * 2;
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
-export type Pointer = { x: number; y: number; active: boolean };
-
+/**
+ * One unhurried crossing from one side of the screen to the other: a slow, wide wave rather than
+ * zig-zags, the odd glide with wings held open, and turns that only ever ease in.
+ */
 export class Butterfly {
   x: number;
   y: number;
-  private vx = 0;
-  private vy = 0;
-  private heading = 0;
+  private u = 0;
+  private duration: number;
+  private heading: number;
   private flap = Math.random() * TAU;
-  private wander = Math.random() * 100;
+  private phase = Math.random() * TAU;
   private wing: Wing;
   private size: number;
-  /** "fly" → free; "approach" → heading to a perch; "perch" → resting with slow wings */
-  private mode: "fly" | "approach" | "perch" = "fly";
-  private timer: number;
-  private alpha = 0;
-  private passTo: [number, number] | null;
   done = false;
 
   constructor(
-    x: number,
-    y: number,
-    opts: { wing?: number; size?: number; /** crossing butterflies leave the screen when done */ passTo?: [number, number] } = {},
+    private from: [number, number],
+    private to: [number, number],
+    opts: { wing?: number; size?: number; /** px per second along the crossing */ speed?: number } = {},
   ) {
-    this.x = x;
-    this.y = y;
+    [this.x, this.y] = from;
     this.wing = WINGS[opts.wing ?? Math.floor(Math.random() * WINGS.length)];
-    this.size = opts.size ?? 17 + Math.random() * 4;
-    this.timer = 6 + Math.random() * 8;
-    this.passTo = opts.passTo ?? null;
+    this.size = opts.size ?? 15 + Math.random() * 3;
+    this.duration = Math.hypot(to[0] - from[0], to[1] - from[1]) / (opts.speed ?? 42);
+    this.heading = Math.atan2(to[1] - from[1], to[0] - from[0]) + Math.PI / 2;
   }
 
-  /**
-   * @param home   point the butterfly loosely circles (the flower), with the radius it keeps to
-   * @param perch  landing spot on the flower, or null when the flower isn't open enough to land on
-   */
-  update(dt: number, time: number, bounds: { w: number; h: number; /** keep clear of the copy on the left */ minX?: number }, pointer: Pointer, home: { x: number; y: number; r: number } | null, perch: { x: number; y: number } | null) {
-    this.alpha = Math.min(1, this.alpha + dt * 0.8);
-    this.timer -= dt;
-    this.wander += dt;
+  private at(u: number, time: number): [number, number] {
+    const dx = this.to[0] - this.from[0], dy = this.to[1] - this.from[1];
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len;
+    // a long, lazy wave across the crossing, plus the faintest lift with each wingbeat
+    const wave = Math.sin(u * TAU * 1.6 + this.phase) * 38 + Math.sin(u * TAU * 3.1 + this.phase * 2) * 10;
+    const lift = Math.sin(time * 7) * 1.5;
+    return [this.from[0] + dx * u + nx * wave, this.from[1] + dy * u + ny * wave + lift];
+  }
 
-    // steering target
-    let tx: number, ty: number, speed: number;
-    if (this.passTo) {
-      tx = this.passTo[0];
-      ty = this.passTo[1] + Math.sin(this.wander * 0.9) * 60;
-      speed = 70;
-      if (Math.hypot(this.x - this.passTo[0], this.y - this.passTo[1]) < 40) this.done = true;
-    } else {
-      if (this.mode === "fly" && this.timer <= 0 && perch) {
-        this.mode = "approach";
-      } else if (this.mode === "fly" && this.timer <= 0) {
-        this.timer = 4 + Math.random() * 6;
-      }
-      if (this.mode !== "fly" && !perch) {
-        this.mode = "fly";
-        this.timer = 5 + Math.random() * 6;
-      }
-      if (this.mode === "approach" && perch) {
-        tx = perch.x;
-        ty = perch.y;
-        speed = 55;
-        if (Math.hypot(this.x - tx, this.y - ty) < 5) {
-          this.mode = "perch";
-          this.timer = 3 + Math.random() * 3;
-        }
-      } else if (this.mode === "perch" && perch) {
-        tx = perch.x;
-        ty = perch.y;
-        speed = 0;
-        if (this.timer <= 0) {
-          this.mode = "fly";
-          this.timer = 8 + Math.random() * 10;
-          this.vy = -60;
-        }
-      } else {
-        // loose figure-of-eights around the flower, wandering by layered sines
-        const h = home ?? { x: bounds.w * 0.5, y: bounds.h * 0.4, r: Math.min(bounds.w, bounds.h) * 0.3 };
-        const a = this.wander * 0.23;
-        tx = h.x + Math.sin(a * 1.3 + 1) * h.r * 1.35 + Math.sin(a * 2.9) * h.r * 0.3;
-        ty = h.y + Math.sin(a * 2.1) * h.r * 0.7 + Math.cos(a * 3.7) * h.r * 0.2 - h.r * 0.15;
-        speed = 48 + Math.sin(a * 5) * 14;
-      }
-      if (bounds.minX) tx = Math.max(tx, bounds.minX + 30);
-      ty = Math.min(Math.max(ty, 90), bounds.h - 60);
+  update(dt: number, time: number) {
+    this.u += dt / this.duration;
+    if (this.u >= 1) {
+      this.done = true;
+      return;
     }
+    const [x, y] = this.at(this.u, time);
+    const [ax, ay] = this.at(Math.min(1, this.u + 0.01), time);
+    this.x = x;
+    this.y = y;
+    const want = Math.atan2(ay - y, ax - x) + Math.PI / 2;
+    const diff = Math.atan2(Math.sin(want - this.heading), Math.cos(want - this.heading));
+    this.heading += diff * clamp01(dt * 1.5);
 
-    // shy of the cursor: a nearby pointer startles it away (and off its perch)
-    if (pointer.active) {
-      const dx = this.x - pointer.x, dy = this.y - pointer.y;
-      const d = Math.hypot(dx, dy);
-      if (d < 110) {
-        const push = (1 - d / 110) * 260;
-        this.vx += (dx / (d || 1)) * push * dt;
-        this.vy += (dy / (d || 1)) * push * dt;
-        if (this.mode !== "fly") {
-          this.mode = "fly";
-          this.timer = 6 + Math.random() * 6;
-        }
-      }
-    }
-
-    if (this.mode === "perch") {
-      this.vx *= Math.exp(-dt * 10);
-      this.vy *= Math.exp(-dt * 10);
-      this.x += (tx - this.x) * clamp01(dt * 8);
-      this.y += (ty - this.y) * clamp01(dt * 8);
-    } else {
-      const dx = tx - this.x, dy = ty - this.y;
-      const d = Math.hypot(dx, dy) || 1;
-      // butterflies don't fly straight: add a bobbing flutter on top of the steering
-      const bob = Math.sin(time * 6 + this.wander) * 22;
-      this.vx += ((dx / d) * speed - this.vx) * clamp01(dt * 1.6);
-      this.vy += ((dy / d) * speed - this.vy + bob) * clamp01(dt * 1.6);
-      this.x += this.vx * dt;
-      this.y += this.vy * dt;
-    }
-
-    const want = Math.atan2(this.vy, this.vx) + Math.PI / 2;
-    if (this.mode !== "perch" && Math.hypot(this.vx, this.vy) > 8) {
-      let diff = want - this.heading;
-      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-      this.heading += diff * clamp01(dt * 4);
-    }
-
-    // wingbeat: quick in flight with the odd glide, slow and wide when resting
-    const gliding = this.mode === "fly" && Math.sin(this.wander * 0.7) > 0.75;
-    const rate = this.mode === "perch" ? 1.6 : gliding ? 1.2 : 11;
-    this.flap += dt * rate * TAU * 0.5;
+    // wingbeat: steady and soft, with an occasional glide on open wings
+    const gliding = Math.sin(time * 0.6 + this.phase) > 0.7;
+    this.flap += dt * (gliding ? 0.6 : 6) * TAU * 0.5;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
     const s = this.size;
     // wing opening as seen from above: 1 = spread flat, ~0.15 = folded up
-    const spread = this.mode === "perch" ? 0.55 + 0.45 * Math.abs(Math.cos(this.flap)) : 0.15 + 0.85 * Math.abs(Math.cos(this.flap));
+    const spread = 0.2 + 0.8 * Math.abs(Math.cos(this.flap));
     const { fore, hind, edge, spot } = this.wing;
     ctx.save();
-    ctx.globalAlpha = this.alpha;
+    // ease in and out at the edges of its trip
+    ctx.globalAlpha = Math.min(1, this.u * 12, (1 - this.u) * 12);
     ctx.translate(this.x, this.y);
     ctx.rotate(this.heading);
 

@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 
 import { drawFlower } from "@/lib/bloom/draw";
 import { KINDS, blend, css, mixRgb } from "@/lib/bloom/kinds";
-import { Butterfly, FallingPetal, type Pointer } from "@/lib/bloom/life";
+import { FallingPetal } from "@/lib/bloom/life";
 import { SITE, waLink } from "@/lib/site";
 
 const smooth = (a: number, b: number, x: number) => {
@@ -58,20 +58,13 @@ export function HeroBloom() {
     };
 
     const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
-    // the same pointer in canvas pixels, so butterflies can shy away from it
-    const near: Pointer = { x: -999, y: -999, active: false };
     const onMove = (e: PointerEvent) => {
       pointer.x = e.clientX / window.innerWidth - 0.5;
       pointer.y = e.clientY / window.innerHeight - 0.5;
-      const rect = el.getBoundingClientRect();
-      near.x = e.clientX - rect.left;
-      near.y = e.clientY - rect.top;
-      near.active = e.pointerType === "mouse";
     };
 
-    // a little life around the flower; none of it for visitors who prefer reduced motion
+    // petals drifting off the flower; none of it for visitors who prefer reduced motion
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const butterflies: Butterfly[] = calm ? [] : [new Butterfly(w + 40, h * 0.2, { wing: 0 }), new Butterfly(w + 90, h * 0.75, { wing: 1, size: 16 })];
     const petals: FallingPetal[] = [];
     let nextPetal = 3;
     window.addEventListener("pointermove", onMove, { passive: true });
@@ -129,7 +122,7 @@ export function HeroBloom() {
         floor: h,
       });
 
-      // petals let go now and then once the flower is open; butterflies circle it and sometimes land
+      // petals let go now and then once the flower is open
       if (!calm) {
         nextPetal -= dt;
         if (nextPetal <= 0 && open > 0.6 && petals.length < 6) {
@@ -143,11 +136,6 @@ export function HeroBloom() {
           pt.draw(ctx);
         }
         for (let i = petals.length - 1; i >= 0; i--) if (petals[i].done) petals.splice(i, 1);
-        const perch = open > 0.75 ? { x: cx, y: cy - r * 0.12 } : null;
-        for (const b of butterflies) {
-          b.update(dt, time, { w, h, minX: mobile ? 0 : w * 0.47 }, near, { x: cx, y: cy - r * 0.2, r: r * 1.25 }, perch);
-          b.draw(ctx);
-        }
       }
 
       // the page breathes the same colour: a soft glow behind the flower over a barely tinted cream
