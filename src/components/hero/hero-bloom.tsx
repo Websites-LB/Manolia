@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 import { drawFlower } from "@/lib/bloom/draw";
-import { KINDS, blend, css } from "@/lib/bloom/kinds";
+import { KINDS, blend, css, mixRgb } from "@/lib/bloom/kinds";
+import { Butterfly, FallingPetal, type Pointer } from "@/lib/bloom/life";
 import { SITE, waLink } from "@/lib/site";
 
 const smooth = (a: number, b: number, x: number) => {
@@ -57,10 +58,22 @@ export function HeroBloom() {
     };
 
     const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
+    // the same pointer in canvas pixels, so butterflies can shy away from it
+    const near: Pointer = { x: -999, y: -999, active: false };
     const onMove = (e: PointerEvent) => {
       pointer.x = e.clientX / window.innerWidth - 0.5;
       pointer.y = e.clientY / window.innerHeight - 0.5;
+      const rect = el.getBoundingClientRect();
+      near.x = e.clientX - rect.left;
+      near.y = e.clientY - rect.top;
+      near.active = e.pointerType === "mouse";
     };
+
+    // a little life around the flower; none of it for visitors who prefer reduced motion
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const butterflies: Butterfly[] = calm ? [] : [new Butterfly(w + 40, h * 0.2, { wing: 0 }), new Butterfly(w + 90, h * 0.75, { wing: 1, size: 16 })];
+    const petals: FallingPetal[] = [];
+    let nextPetal = 3;
     window.addEventListener("pointermove", onMove, { passive: true });
 
     let visible = true;
@@ -101,18 +114,41 @@ export function HeroBloom() {
       ctx.clearRect(0, 0, W, H);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const r = mobile ? Math.min(w * 0.3, h * 0.33) : Math.min(w * 0.17, h * 0.27);
+      const cx = mobile ? w / 2 : w * 0.67 + pointer.sx * 10;
+      const cy = mobile ? h * 0.46 : h * 0.47 + pointer.sy * 8;
       drawFlower(ctx, {
         f: flower,
         open,
         time,
-        cx: mobile ? w / 2 : w * 0.67 + pointer.sx * 10,
-        cy: mobile ? h * 0.46 : h * 0.47 + pointer.sy * 8,
+        cx,
+        cy,
         r,
         elev: 0.6 + 0.25 * open - pointer.sy * 0.06 + Math.sin(time * 0.4) * 0.015,
         spin: p * 1.4 + time * 0.03 + pointer.sx * 0.15,
         draw,
         floor: h,
       });
+
+      // petals let go now and then once the flower is open; butterflies circle it and sometimes land
+      if (!calm) {
+        nextPetal -= dt;
+        if (nextPetal <= 0 && open > 0.6 && petals.length < 6) {
+          const a = Math.random() * Math.PI * 2;
+          // a petal comes loose from the rim, so it falls clear of the flower
+          petals.push(new FallingPetal(cx + Math.cos(a) * r * 0.95, cy + Math.abs(Math.sin(a)) * r * 0.45, mixRgb(flower.tip, flower.base, Math.random() * 0.4)));
+          nextPetal = 2.2 + Math.random() * 2.2;
+        }
+        for (const pt of petals) {
+          pt.update(dt, h);
+          pt.draw(ctx);
+        }
+        for (let i = petals.length - 1; i >= 0; i--) if (petals[i].done) petals.splice(i, 1);
+        const perch = open > 0.75 ? { x: cx, y: cy - r * 0.12 } : null;
+        for (const b of butterflies) {
+          b.update(dt, time, { w, h, minX: mobile ? 0 : w * 0.47 }, near, { x: cx, y: cy - r * 0.2, r: r * 1.25 }, perch);
+          b.draw(ctx);
+        }
+      }
 
       // the page breathes the same colour: a soft glow behind the flower over a barely tinted cream
       const st = stage.current!.style;
@@ -148,7 +184,7 @@ export function HeroBloom() {
   };
 
   return (
-    <section ref={section} className="relative h-[560vh]" aria-label="Manolia — The Floral Boutique">
+    <section ref={section} data-hero className="relative h-[560vh]" aria-label="Manolia — The Floral Boutique">
       <div
         ref={stage}
         className="hero-stage sticky top-0 h-svh w-full overflow-hidden"
