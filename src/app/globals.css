@@ -168,3 +168,14 @@
   }
   .qty:hover { border-color: var(--color-ink); }
 }
+
+/* butterfly wingbeat: the wing folds toward the body (seen from above) */
+@keyframes flap {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0.22); }
+}
+
+/* the finest engraved hatching is invisible on a phone and costly to draw, so phones skip it */
+@media (max-width: 767px) {
+  [data-fine] { display: none; }
+}

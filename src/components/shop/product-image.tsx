@@ -1,31 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 
-import { photoUrl, type Product } from "@/lib/products";
+import { Engraving } from "@/components/art/engraving";
+import { buildArrangement, PLATE_VIEW } from "@/lib/botanic/specimen";
+import type { Product } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
-export function ProductImage({ product, className, sizes = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" }: { product: Product; className?: string; sizes?: string }) {
-  const [ready, setReady] = useState(false);
-
+/**
+ * A product shown as an engraved plate instead of a stock photograph: the arrangement drawn in
+ * the house hand on night ground, framed like a page from a botanical folio.
+ */
+export function ProductImage({ product, className, mode = "view" }: { product: Product; className?: string; mode?: "view" | "static"; sizes?: string }) {
+  const pieces = useMemo(() => buildArrangement(product.art.flower, product.art.style, product.art.tint, product.art.seed), [product]);
   return (
-    <div className={cn("relative h-full w-full bg-paper-2", className)}>
-      <div className={cn("absolute inset-0 animate-pulse bg-gradient-to-b from-paper-2 to-[#ddd3c1] transition-opacity duration-700", ready && "opacity-0")} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={photoUrl(product.photo, 800)}
-        srcSet={[400, 800, 1200].map((w) => `${photoUrl(product.photo, w)} ${w}w`).join(", ")}
-        sizes={sizes}
-        alt={`${product.name}: ${product.stems}`}
-        loading="lazy"
-        decoding="async"
-        draggable={false}
-        onLoad={() => setReady(true)}
-        ref={(img) => {
-          if (img?.complete && img.naturalWidth) setReady(true);
-        }}
-        className={cn("relative h-full w-full object-cover transition-opacity duration-700 ease-out", ready ? "opacity-100" : "opacity-0")}
-      />
+    <div
+      className={cn("relative h-full w-full overflow-hidden bg-forest", className)}
+      style={{ background: `radial-gradient(70% 55% at 50% 38%, ${product.art.tint}22, transparent 70%), #13241a` }}
+    >
+      <Engraving pieces={pieces} view={PLATE_VIEW} mode={mode} pace={0.12} label={`${product.name}, drawn: ${product.stems}`} className="absolute inset-[6%] h-[88%] w-[88%]" />
+      <div className="pointer-events-none absolute inset-[3%] border border-line/15" />
     </div>
   );
 }

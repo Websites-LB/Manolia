@@ -1,3 +1,5 @@
+import type { Kind, Style } from "./botanic/specimen";
+
 export type Category = "bouquets" | "boxes" | "vases";
 
 export type Product = {
@@ -8,11 +10,8 @@ export type Product = {
   price: number;
   blurb: string;
   stems: string;
-  /**
-   * Unsplash photo id (free licence), hotlinked from images.unsplash.com as Unsplash asks.
-   * Stand-ins until Manolia's own product photos replace them.
-   */
-  photo: string;
+  /** How the piece is drawn on its plate: the main flower, the arrangement and its colour. */
+  art: { flower: Kind; style: Style; tint: string; seed: number };
 };
 
 export const CATEGORIES: { id: Category | "all"; label: string }[] = [
@@ -30,7 +29,7 @@ export const PRODUCTS: Product[] = [
     price: 65,
     blurb: "Soft pink roses with waxflower and silver eucalyptus, loosely tied and wrapped in ivory paper.",
     stems: "Roses · waxflower · eucalyptus",
-    photo: "1533793241176-a270e75ef2ad",
+    art: { flower: "rose", style: "posy", tint: "#f0b9ae", seed: 3 },
   },
   {
     id: "old-souk",
@@ -39,7 +38,7 @@ export const PRODUCTS: Product[] = [
     price: 85,
     blurb: "An armful of pink peonies in kraft paper, warm as stone walls at golden hour.",
     stems: "Peonies · kraft wrap",
-    photo: "1560583035-79c3e11ae176",
+    art: { flower: "peony", style: "posy", tint: "#f2b48c", seed: 5 },
   },
   {
     id: "first-dance",
@@ -48,7 +47,7 @@ export const PRODUCTS: Product[] = [
     price: 120,
     blurb: "Our bridal signature: ivory garden roses, white blooms and trailing greenery, finished with silk ribbon.",
     stems: "Bridal · garden roses · greenery",
-    photo: "1578534102052-70f4c14ee0e7",
+    art: { flower: "rose", style: "posy", tint: "#f3eadb", seed: 8 },
   },
   {
     id: "lavender-hour",
@@ -57,7 +56,7 @@ export const PRODUCTS: Product[] = [
     price: 90,
     blurb: "A dense dome of lavender roses, wrapped in white: a quiet palette for evenings.",
     stems: "Lavender roses",
-    photo: "1609338682700-ea188bcdfa85",
+    art: { flower: "rose", style: "posy", tint: "#c9b5e6", seed: 13 },
   },
   {
     id: "velvet-box",
@@ -66,7 +65,7 @@ export const PRODUCTS: Product[] = [
     price: 95,
     blurb: "Deep red roses packed tight in a round keepsake box. The classic, done properly.",
     stems: "Red roses · keepsake box",
-    photo: "1548094967-e25a127d1f6d",
+    art: { flower: "rose", style: "box", tint: "#b8434e", seed: 21 },
   },
   {
     id: "blush-box",
@@ -75,7 +74,7 @@ export const PRODUCTS: Product[] = [
     price: 85,
     blurb: "Pale pink roses in our black hat box, tied with a silk ribbon and a handwritten tag.",
     stems: "Pink roses · hat box",
-    photo: "1771085417618-c69f6209e540",
+    art: { flower: "rose", style: "box", tint: "#f0b9ae", seed: 34 },
   },
   {
     id: "harbour-blue",
@@ -84,7 +83,7 @@ export const PRODUCTS: Product[] = [
     price: 110,
     blurb: "Blue hydrangea heads gathered close, after the sea below the citadel.",
     stems: "Hydrangea",
-    photo: "1613916107413-4991c04f0837",
+    art: { flower: "hydrangea", style: "vase", tint: "#9fb6e0", seed: 55 },
   },
   {
     id: "maison",
@@ -93,7 +92,7 @@ export const PRODUCTS: Product[] = [
     price: 140,
     blurb: "Blush peonies arranged loose and tall in a glass vase. Yours to keep.",
     stems: "Peonies · glass vase",
-    photo: "1616148037989-4c3a9946a514",
+    art: { flower: "peony", style: "vase", tint: "#f0b9ae", seed: 89 },
   },
   {
     id: "citadel",
@@ -102,11 +101,7 @@ export const PRODUCTS: Product[] = [
     price: 75,
     blurb: "A few stems of violet-blue hydrangea in a simple glass vase, for a desk or a bedside.",
     stems: "Hydrangea · glass vase",
-    photo: "1585738460883-62b4205281bf",
+    art: { flower: "hydrangea", style: "vase", tint: "#b9a3e0", seed: 144 },
   },
 ];
-
-/** Builds a sized, cropped Unsplash URL for a product photo. */
-export const photoUrl = (id: string, width: number) =>
-  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&h=${Math.round(width * 1.25)}&q=80`;
 

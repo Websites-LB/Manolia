@@ -36,5 +36,6 @@ This is the house workflow for every site we build, Manolia included.
 - Stack: Next.js 15 · React 19 · Tailwind 4 · GSAP + ScrollTrigger · Lenis · Framer Motion · Zustand.
 - Type: Instrument Serif (display) · Geist (body) · Geist Mono (labels).
 - Palette: night forest `#13241a`, paper `#f1ece2`, ink line `#efe6d2`, blush `#f0b9ae`, clay `#b4584d`.
-- Hero art is generated code (`src/lib/botanic`): an engraved, hand-coloured bouquet drawn stem by stem.
-- Orders go out as a WhatsApp message (`src/lib/site.ts`); product photos are Unsplash stand-ins until Manolia's own.
+- All art is generated code (`src/lib/botanic`): the hero bouquet, the flowers along the scroll-grown root,
+  the shop plates and the butterflies. Keep new illustration in the same engraved, hand-coloured hand.
+- Orders go out as a WhatsApp message (`src/lib/site.ts`). Flower facts live in `src/lib/garden.ts`.
