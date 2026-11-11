@@ -83,11 +83,10 @@ function Roots({ sys, w, h }: { sys: RootSystem; w: number; h: number }) {
 /* ───────────────────────── a plant on the root ───────────────────────── */
 
 function Plant({ kind, tint, seed, label, className }: { kind: Kind; tint: string; seed: number; label: string; className?: string }) {
-  const pieces = useMemo(() => buildSpecimen(kind, tint, seed), [kind, tint, seed]);
   return (
     <div className={cn("relative", className)} style={{ aspectRatio: `${SPECIMEN_VIEW.w} / ${SPECIMEN_VIEW.h}` }}>
       <div className="absolute inset-[-30%] -z-10" style={{ background: `radial-gradient(closest-side, ${tint}2a, transparent)` }} />
-      <Engraving pieces={pieces} view={SPECIMEN_VIEW} mode="view" pace={0.35} label={label} className="h-full w-full" />
+      <Engraving build={() => buildSpecimen(kind, tint, seed)} view={SPECIMEN_VIEW} mode="view" pace={0.35} label={label} className="h-full w-full" />
       {/* the root meets the stem exactly here */}
       <span data-anchor className="absolute bottom-0 left-1/2 h-px w-px" />
     </div>
