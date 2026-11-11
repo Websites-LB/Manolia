@@ -9,8 +9,8 @@ export function ProductImage({ product, className, sizes = "(min-width: 1024px) 
   const [ready, setReady] = useState(false);
 
   return (
-    <div className={cn("relative h-full w-full bg-stone", className)}>
-      <div className={cn("absolute inset-0 animate-pulse bg-gradient-to-b from-stone to-[#ddd2bf] transition-opacity duration-700", ready && "opacity-0")} />
+    <div className={cn("relative h-full w-full bg-paper-2", className)}>
+      <div className={cn("absolute inset-0 animate-pulse bg-gradient-to-b from-paper-2 to-[#ddd3c1] transition-opacity duration-700", ready && "opacity-0")} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={photoUrl(product.photo, 800)}

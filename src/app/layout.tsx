@@ -1,16 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Jost, Pinyon_Script } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 
-import { CartSheet } from "@/components/shop/cart-sheet";
 import { SmoothScroll } from "@/components/providers/smooth-scroll";
+import { CartSheet } from "@/components/shop/cart-sheet";
+import { Cursor } from "@/components/site/cursor";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 
 import "./globals.css";
 
-const display = Cormorant_Garamond({ variable: "--font-cormorant", subsets: ["latin"], weight: ["400", "500", "600"], style: ["normal", "italic"] });
-const script = Pinyon_Script({ variable: "--font-pinyon", subsets: ["latin"], weight: "400" });
-const sans = Jost({ variable: "--font-jost", subsets: ["latin"] });
+const serif = Instrument_Serif({ variable: "--font-instrument", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
+const sans = Geist({ variable: "--font-geist", subsets: ["latin"] });
+const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Manolia · The Floral Boutique · Jbeil, Byblos",
@@ -18,18 +19,19 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f3ede3",
+  themeColor: "#13241a",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${display.variable} ${script.variable} ${sans.variable} grain`}>
+      <body className={`${serif.variable} ${sans.variable} ${mono.variable} grain`}>
         <SmoothScroll>
           <SiteHeader />
           <main>{children}</main>
           <SiteFooter />
           <CartSheet />
+          <Cursor />
         </SmoothScroll>
       </body>
     </html>
