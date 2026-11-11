@@ -2,7 +2,7 @@
 
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import type { Piece } from "@/lib/botanic/bouquet";
 import { mixHex } from "@/lib/botanic/color";
@@ -13,7 +13,8 @@ export const GROUND = "#13241a";
 export const INK = "#efe6d2";
 
 type Props = {
-  pieces: Piece[];
+  /** Builds the drawing. Called in the browser only, just before the plate comes into view. */
+  build: () => Piece[];
   view: { w: number; h: number };
   label: string;
   className?: string;
@@ -33,13 +34,38 @@ type Props = {
 /**
  * Renders engraved pieces as SVG and inks them in the order they are listed:
  * each outline is drawn, then its hand-colouring floods in just behind it.
+ *
+ * The drawing is generated in the browser, not shipped in the HTML: a plate is a few hundred paths,
+ * so the server sends an empty frame of the right size and the paths are built a screen or so
+ * before they are needed.
  */
-export function Engraving({ pieces, view, label, className, mode = "view", delay = 0, pace = 0.16, ground = GROUND, washes = false, thinOnPhones = true }: Props) {
+export function Engraving({ build, view, label, className, mode = "view", delay = 0, pace = 0.16, ground = GROUND, washes = false, thinOnPhones = true }: Props) {
   const svg = useRef<SVGSVGElement>(null);
+  const [pieces, setPieces] = useState<Piece[] | null>(null);
+
+  // build now (hero, cart) or when the frame is within about a screen of the viewport
+  useEffect(() => {
+    const el = svg.current;
+    if (!el) return;
+    if (mode !== "view" || !("IntersectionObserver" in window)) return void setPieces(build());
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          setPieces(build());
+        }
+      },
+      { rootMargin: "100% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+    // build is a fresh closure on every render; the drawing it returns only depends on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   useLayoutEffect(() => {
     const root = svg.current;
-    if (!root) return;
+    if (!root || !pieces) return;
     if (mode === "static" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       root.style.visibility = "visible";
       return;
@@ -78,7 +104,7 @@ export function Engraving({ pieces, view, label, className, mode = "view", delay
 
   return (
     <svg ref={svg} viewBox={`0 0 ${view.w} ${view.h}`} className={className} role="img" aria-label={label} style={{ visibility: mode === "static" ? "visible" : "hidden" }}>
-      {washes && (
+      {pieces && washes && (
         <>
           <defs>
             {pieces.map((p, i) =>
@@ -106,7 +132,7 @@ export function Engraving({ pieces, view, label, className, mode = "view", delay
         </>
       )}
       <g fill="none" stroke={INK} strokeLinecap="round" strokeLinejoin="round">
-        {pieces.map((p) => (
+        {pieces?.map((p) => (
           <g key={p.id} data-piece={p.id}>
             {p.strokes.map((s, j) => (
               <path

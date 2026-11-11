@@ -1,7 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
-
 import { Engraving } from "@/components/art/engraving";
 import { buildBouquet, VIEW } from "@/lib/botanic/bouquet";
 
@@ -10,10 +8,9 @@ import { buildBouquet, VIEW } from "@/lib/botanic/bouquet";
  * then stems, leaves, each bloom from the back to the front, and the silk tie last.
  */
 export function BouquetArt({ className }: { className?: string }) {
-  const pieces = useMemo(() => buildBouquet(7), []);
   return (
     <Engraving
-      pieces={pieces}
+      build={() => buildBouquet(7)}
       view={VIEW}
       mode="load"
       delay={0.35}
