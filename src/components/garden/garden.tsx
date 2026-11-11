@@ -3,16 +3,18 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { Engraving } from "@/components/art/engraving";
+import { Photo } from "@/components/art/photo";
 import { Magnetic } from "@/components/motion/magnetic";
 import { SplitWords } from "@/components/motion/split-words";
 import { usd } from "@/lib/cart-store";
-import { buildRoots, type RootSystem } from "@/lib/botanic/roots";
+import { buildRoots, type Crown, type RootSystem } from "@/lib/botanic/roots";
 import { buildSpecimen, SPECIMEN_VIEW, type Kind } from "@/lib/botanic/specimen";
 import type { Pt } from "@/lib/botanic/geometry";
 import { BLOOMS, type Bloom } from "@/lib/garden";
+import { stemPhoto } from "@/lib/photos";
 import { PRODUCTS } from "@/lib/products";
 import { SITE, waLink } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -25,6 +27,10 @@ const MAPS = `https://www.google.com/maps/search/?api=1&query=${encodeURICompone
 
 /** Where the growing tip sits in the viewport while you scroll (0 = top, 1 = bottom). */
 const TIP = 0.62;
+/** Root colours: bark in shadow, the body, the lit side, and the pale young threads. */
+const ROOT = { shade: "#050a07", body: "#a5805c", body2: "#9a7654", lit: "#e3cfa9", fine: "#c4a985" };
+/** the root only waits for the bouquet to finish drawing the first time it is threaded */
+let seen = false;
 
 function Roots({ sys, w, h }: { sys: RootSystem; w: number; h: number }) {
   const svg = useRef<SVGSVGElement>(null);
@@ -48,32 +54,43 @@ function Roots({ sys, w, h }: { sys: RootSystem; w: number; h: number }) {
       p.style.strokeDashoffset = `${1 - q}`;
     };
 
-    // the tip sits at a fixed height in the viewport, so the root grows exactly as fast as you scroll
+    // On arrival the root pushes out of the bouquet's stems to the foot of the first screen by itself;
+    // after that its tip sits at a fixed height in the viewport, so it grows exactly as fast as you scroll.
+    const start = sys.main[0].y0;
+    const intro = { y: start };
     const grow = () => {
-      const y = window.innerHeight * TIP - root.getBoundingClientRect().top;
+      const y = Math.max(intro.y, window.innerHeight * TIP - root.getBoundingClientRect().top);
       segs.forEach((p, i) => {
-        const m = sys.main[i >> 1];
+        const m = sys.main[Math.floor(i / 3)];
         write(p, lastSeg, i, (y - m.y0) / (m.y1 - m.y0 || 1));
       });
       lat.forEach((p, i) => {
         const r = sys.lateral[i];
-        write(p, lastLat, i, (y - r.y0) / (r.y1 - r.y0 + 120));
+        write(p, lastLat, i, (y - r.y0) / (r.y1 - r.y0 + 60));
       });
     };
+    const tween = gsap.to(intro, { y: Math.max(start, window.innerHeight + 40), duration: 3.2, delay: seen ? 0 : 3.1, ease: "expo.out", onUpdate: grow });
+    seen = true;
     const st = ScrollTrigger.create({ trigger: root, start: "top bottom", end: "bottom top", onUpdate: grow, onRefresh: grow });
     grow();
-    return () => st.kill();
+    return () => {
+      tween.kill();
+      st.kill();
+    };
   }, [sys]);
 
+  const dash = { pathLength: 1, strokeDasharray: "1 1", strokeDashoffset: 1 };
   return (
-    <svg ref={svg} width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="pointer-events-none absolute left-0 top-0" aria-hidden>
-      <g fill="none" stroke="#efe6d2" strokeLinecap="round" strokeLinejoin="round">
+    <svg ref={svg} width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="pointer-events-none absolute left-0 top-0 z-[1]" aria-hidden>
+      <g fill="none" strokeLinecap="round" strokeLinejoin="round">
         {sys.lateral.map((r, i) => (
-          <path key={i} className="rt-lat" d={r.d} strokeWidth={r.w} strokeOpacity={r.o * 0.8} pathLength={1} strokeDasharray="1 1" strokeDashoffset={1} />
+          <path key={i} className="rt-lat" d={r.d} stroke={r.w > 1.6 ? ROOT.body : ROOT.fine} strokeWidth={r.w} strokeOpacity={r.o} {...dash} />
         ))}
         {sys.main.map((m, i) => [
-          <path key={`e${i}`} className="rt-seg" d={m.echo} strokeWidth={1} strokeOpacity={0.4} pathLength={1} strokeDasharray="1 1" strokeDashoffset={1} />,
-          <path key={`m${i}`} className="rt-seg" d={m.d} strokeWidth={2.2} strokeOpacity={0.9} pathLength={1} strokeDasharray="1 1" strokeDashoffset={1} />,
+          // the shadow the root casts on the ground behind it, then its body, then its lit side
+          <path key={`s${i}`} className="rt-seg" d={m.d} stroke={ROOT.shade} strokeWidth={m.w + 3} strokeOpacity={0.5} transform="translate(2.5 4)" {...dash} />,
+          <path key={`m${i}`} className="rt-seg" d={m.d} stroke={i % 3 === 1 ? ROOT.body2 : ROOT.body} strokeWidth={m.w} {...dash} />,
+          <path key={`l${i}`} className="rt-seg" d={m.lit} stroke={ROOT.lit} strokeWidth={Math.max(0.8, m.w * 0.28)} strokeOpacity={0.75} {...dash} />,
         ])}
       </g>
     </svg>
@@ -83,11 +100,17 @@ function Roots({ sys, w, h }: { sys: RootSystem; w: number; h: number }) {
 /* ───────────────────────── a plant on the root ───────────────────────── */
 
 function Plant({ kind, tint, seed, label, className }: { kind: Kind; tint: string; seed: number; label: string; className?: string }) {
-  const pieces = useMemo(() => buildSpecimen(kind, tint, seed), [kind, tint, seed]);
+  const photo = stemPhoto(kind);
+  // a plant with a photograph is shown as one; the painted specimen is only built when there is none
+  const pieces = useCallback(() => (photo ? [] : buildSpecimen(kind, tint, seed)), [kind, tint, seed, photo]);
   return (
     <div className={cn("relative", className)} style={{ aspectRatio: `${SPECIMEN_VIEW.w} / ${SPECIMEN_VIEW.h}` }}>
       <div className="absolute inset-[-30%] -z-10" style={{ background: `radial-gradient(closest-side, ${tint}2a, transparent)` }} />
-      <Engraving pieces={pieces} view={SPECIMEN_VIEW} mode="view" pace={0.35} label={label} className="h-full w-full" />
+      {photo ? (
+        <Photo src={photo} alt={label} width={800} height={1280} sizes="(min-width: 768px) 30vw, 64vw" arrive="grow" />
+      ) : (
+        <Engraving pieces={pieces} view={SPECIMEN_VIEW} mode="view" label={label} className="h-full w-full" />
+      )}
       {/* the root meets the stem exactly here */}
       <span data-anchor className="absolute bottom-0 left-1/2 h-px w-px" />
     </div>
@@ -124,10 +147,8 @@ function Station({ side, plant, children }: { side: "left" | "right"; plant: Rea
 function BloomStation({ b, i }: { b: Bloom; i: number }) {
   const items = b.in.map((id) => PRODUCTS.find((p) => p.id === id)!).filter(Boolean);
   return (
-    <Station side={i % 2 ? "right" : "left"} plant={<Plant kind={b.kind} tint={b.tint} seed={i * 7 + 3} label={`${b.name.replace(/\*/g, "")}, engraved`} className="w-[min(64vw,300px)] md:w-[min(30vw,440px)]" />}>
-      <p className="label text-line/45">
-        N°{String(i + 1).padStart(2, "0")} — <em className="font-serif text-[15px] normal-case tracking-normal text-blush">{b.latin}</em>
-      </p>
+    <Station side={i % 2 ? "right" : "left"} plant={<Plant kind={b.kind} tint={b.tint} seed={i * 7 + 3} label={b.name.replace(/\*/g, "")} className="w-[min(64vw,300px)] md:w-[min(30vw,440px)]" />}>
+      <p className="font-serif text-[19px] italic text-blush">{b.latin}</p>
       <Name text={b.name} className="mt-4" />
       <p className="mt-6 max-w-[44ch] text-[16px] leading-relaxed text-line/70">{b.line}</p>
       <Facts
@@ -145,15 +166,9 @@ function BloomStation({ b, i }: { b: Bloom; i: number }) {
             </Link>
           ))
         ) : (
-          <a
-            href={waLink(`Hello Manolia! Do you have ${b.name.replace(/\*/g, "").toLowerCase()} at the moment?`)}
-            target="_blank"
-            rel="noreferrer"
-            data-cursor="Ask"
-            className="label rounded-full border border-line/20 px-4 py-2.5 text-line/80 transition-colors duration-500 hover:border-blush hover:text-blush"
-          >
-            In season? Ask on WhatsApp →
-          </a>
+          <Link href={`/shop/build?flower=${b.kind}`} data-cursor="Compose" className="label rounded-full border border-line/20 px-4 py-2.5 text-line/80 transition-colors duration-500 hover:border-blush hover:text-blush">
+            Compose a bouquet with it →
+          </Link>
         )}
       </div>
     </Station>
@@ -168,19 +183,20 @@ const SERVICES = [
   ["Table design", "Gypsophila clouds, low runners and candlelight, composed for the way people actually sit and talk."],
 ];
 const STEPS = [
-  ["Choose", "Pick a bouquet in the shop, or ask for something bespoke in your colours."],
+  ["Choose", "Pick a bouquet in the shop, compose your own stem by stem, or tell us the occasion and let us choose."],
   ["Write the card", "Tell us who it is for, when, and what to say. We write it by hand."],
-  ["Send on WhatsApp", "Your order arrives as a message. We confirm stems, delivery and payment with you."],
+  ["Pay and follow it", "Pay by Whish or card. The boutique gets your order at once, and you watch it go from accepted to delivered."],
 ];
 
 /**
- * Below the hero the page becomes one long illustrated plate. A root grows down with your scroll;
+ * The hero (passed in as children) and everything below it are one long illustrated plate. A root
+ * leaves the bouquet's stems and grows down with your scroll;
  * every flower we work with sprouts from it with its name and story, and the practical things —
  * weddings, ordering, the boutique — hang off the same root, ending where you can visit.
  */
-export function Garden() {
-  const box = useRef<HTMLElement>(null);
-  const [geo, setGeo] = useState<{ w: number; h: number; anchors: Pt[]; crowns: Pt[]; narrow: boolean } | null>(null);
+export function Garden({ children }: { children?: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [geo, setGeo] = useState<{ w: number; h: number; anchors: Pt[]; crowns: Crown[]; narrow: boolean } | null>(null);
 
   // measure where each flower's stem meets the ground, and re-thread the root when the layout changes
   useLayoutEffect(() => {
@@ -193,27 +209,35 @@ export function Garden() {
         const q = a.getBoundingClientRect();
         return [q.left - r.left, q.top - r.top];
       };
-      // Walk the markers in page order and route the root: it runs down the outer edge beside each
-      // flower, turns in under the stem, and crosses to the other side only in the gaps between sections.
+      // Walk the markers in page order and route the root: it leaves the bouquet's stems in the hero,
+      // runs down the outer edge beside each flower, turns in under the stem, and crosses to the other
+      // side only in the gaps between sections. `data-via` markers are plain waypoints.
       const W = r.width;
       const narrow = W < 768;
+      const edge = W - 14;
       const anchors: Pt[] = [];
-      const crowns: Pt[] = [];
+      const crowns: Crown[] = [];
       let gapY = -1;
-      const marks = Array.from(el.querySelectorAll<HTMLElement>("[data-anchor], [data-gap]"));
-      marks.forEach((m, i) => {
+      const marks = Array.from(el.querySelectorAll<HTMLElement>("[data-anchor], [data-gap], [data-via]")).filter((m) => m.getClientRects().length);
+      const plants = marks.filter((m) => m.hasAttribute("data-anchor"));
+      marks.forEach((m) => {
         const p = at(m);
         if (m.hasAttribute("data-gap")) return void (gapY = p[1]);
-        const prev = anchors[anchors.length - 1];
-        if (!prev) return void anchors.push(narrow ? [W - 14, p[1]] : p);
-        const last = i === marks.length - 1;
-        if (!last) crowns.push(p);
+        if (m.hasAttribute("data-via")) return void anchors.push(p);
+        const k = plants.indexOf(m);
+        const last = k === plants.length - 1;
+        if (k === 0) {
+          const spread = Number(m.dataset.spread ?? 0) * (m.parentElement?.getBoundingClientRect().width ?? 0);
+          crowns.push({ at: p, spread });
+          return void anchors.push(p);
+        }
+        if (!last) crowns.push({ at: p });
         if (narrow) {
           // one column: the root runs down the right edge and reaches in under each stem
-          const edge = W - 14;
           if (last) return void anchors.push([edge, p[1] - 80], p);
           return void anchors.push([edge, p[1] - 40], p, [edge, p[1] + 50]);
         }
+        const prev = anchors[anchors.length - 1];
         const s = p[0] < W / 2 ? -1 : 1;
         const outer = Math.max(24, Math.min(W - 24, p[0] + s * Math.min(170, W * 0.12)));
         if (gapY > prev[1]) anchors.push([prev[0], gapY - 40], [last ? p[0] : outer, gapY + 60]);
@@ -246,18 +270,17 @@ export function Garden() {
   }, [sys]);
 
   return (
-    <section ref={box} id="garden" className="relative overflow-hidden text-line" style={{ background: "linear-gradient(#13241a, #101d15 30%, #0d1711 70%, #0b140f)" }}>
-      {sys && geo && <Roots sys={sys} w={geo.w} h={geo.h} />}
-
-      {/* where the root breaks ground */}
-      <div className="gutter relative z-10 flex flex-col items-center pb-[12vh] pt-[18vh] text-center">
-        <p className="label text-line/45">(01) — The garden</p>
+    <div ref={box} className="relative">
+      {children}
+      <section id="garden" className="relative overflow-hidden text-line" style={{ background: "linear-gradient(#13241a, #101d15 30%, #0d1711 70%, #0b140f)" }}>
+      {/* the root leaves the hero and swings out to the side, clear of the words */}
+      <div className="gutter relative z-10 flex flex-col items-center pb-[12vh] pt-[22vh] text-center">
+        <span data-via className="absolute left-[12%] top-[19vh] hidden h-px w-px md:block" />
+        <p className="label text-line/45">The garden</p>
         <SplitWords text={"Every bouquet starts\n*underground.*"} className="display mt-6 text-[clamp(52px,7.6vw,140px)] text-paper" />
         <p className="mt-8 max-w-[46ch] text-[15px] leading-relaxed text-line/60">
           Follow the root down. Every flower we tie grows somewhere along it — its name, its season, what it means and the bouquets it ends up in.
         </p>
-        <p className="label mt-10 text-line/40">Scroll ↓</p>
-        <span data-anchor className="mt-10 h-px w-px" />
       </div>
 
       {BLOOMS.map((b, i) => (
@@ -267,16 +290,13 @@ export function Garden() {
       {/* weddings: the gypsophila cloud */}
       <Station
         side="left"
-        plant={<Plant kind="gypsophila" tint="#f3eadb" seed={77} label="Baby's breath, engraved" className="w-[min(64vw,300px)] md:w-[min(30vw,440px)]" />}
+        plant={<Plant kind="gypsophila" tint="#f3eadb" seed={77} label="Baby's breath" className="w-[min(64vw,300px)] md:w-[min(30vw,440px)]" />}
       >
-        <p className="label text-line/45">
-          (02) — <em className="font-serif text-[15px] normal-case tracking-normal text-blush">Gypsophila paniculata</em>, the cloud over every long table
-        </p>
+        <p className="font-serif text-[19px] italic text-blush">Gypsophila paniculata</p>
         <Name text="Weddings & *events*" className="mt-4" />
         <ul className="mt-8 border-t border-line/12">
-          {SERVICES.map(([t, d], k) => (
-            <li key={t} className="grid grid-cols-[2.2rem_1fr] gap-x-3 border-b border-line/12 py-4">
-              <span className="label pt-2 text-line/35">0{k + 1}</span>
+          {SERVICES.map(([t, d]) => (
+            <li key={t} className="border-b border-line/12 py-4">
               <div>
                 <p className="display text-[34px] text-paper">{t}</p>
                 <p className="mt-1 text-[14px] leading-relaxed text-line/60">{d}</p>
@@ -296,9 +316,9 @@ export function Garden() {
       </Station>
 
       {/* ordering: the eucalyptus branch */}
-      <Station side="right" plant={<Plant kind="eucalyptus" tint="#8fb08a" seed={91} label="Eucalyptus, engraved" className="w-[min(64vw,300px)] md:w-[min(30vw,440px)]" />}>
-        <p className="label text-line/45">(03) — How to order</p>
-        <Name text="Three steps, *one message.*" className="mt-4 !text-[clamp(56px,7vw,124px)]" />
+      <Station side="right" plant={<Plant kind="eucalyptus" tint="#8fb08a" seed={91} label="Eucalyptus" className="w-[min(64vw,300px)] md:w-[min(30vw,440px)]" />}>
+        <p className="label text-line/45">How to order</p>
+        <Name text="Three steps, *no phone call.*" className="mt-4 !text-[clamp(56px,7vw,124px)]" />
         <ol className="mt-8 space-y-6">
           {STEPS.map(([t, d], k) => (
             <li key={t} className="grid grid-cols-[3.2rem_1fr] items-baseline gap-3">
@@ -319,7 +339,7 @@ export function Garden() {
       <div className="gutter relative z-10 flex flex-col items-center pb-[16vh] pt-[10vh] text-center">
         <span data-gap className="h-px w-px" />
         <span data-anchor className="mb-14 mt-[8vh] h-px w-px" />
-        <p className="label text-line/45">(04) — Visit the boutique</p>
+        <p className="label text-line/45">Visit the boutique</p>
         <SplitWords text={"Come in and\n*smell them.*"} stagger={0.08} className="display mt-6 text-[clamp(64px,12vw,220px)] leading-[0.84] text-paper" />
         <div className="mt-14 grid w-full max-w-4xl items-center gap-10 md:grid-cols-[1fr_auto_1fr]">
           <div className="md:text-right">
@@ -352,6 +372,8 @@ export function Garden() {
           </div>
         </div>
       </div>
-    </section>
+      </section>
+      {sys && geo && <Roots sys={sys} w={geo.w} h={geo.h} />}
+    </div>
   );
 }

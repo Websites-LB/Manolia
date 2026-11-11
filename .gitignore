@@ -47,3 +47,10 @@ next-env.d.ts
 
 # alt build dir
 /.next-build/
+
+# orders written by the local file store
+/.data/
+
+# raw generated images (the processed ones live in public/art)
+/.claude/gen/*.png
+/.claude/gen/*.jpg

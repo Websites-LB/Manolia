@@ -34,8 +34,16 @@ This is the house workflow for every site we build, Manolia included.
 
 ## Manolia specifics
 - Stack: Next.js 15 · React 19 · Tailwind 4 · GSAP + ScrollTrigger · Lenis · Framer Motion · Zustand.
-- Type: Instrument Serif (display) · Geist (body) · Geist Mono (labels).
+- Type: Instrument Serif only (the logo face) for display, body and labels. Never add a second font.
 - Palette: night forest `#13241a`, paper `#f1ece2`, ink line `#efe6d2`, blush `#f0b9ae`, clay `#b4584d`.
-- All art is generated code (`src/lib/botanic`): the hero bouquet, the flowers along the scroll-grown root,
-  the shop plates and the butterflies. Keep new illustration in the same engraved, hand-coloured hand.
-- Orders go out as a WhatsApp message (`src/lib/site.ts`). Flower facts live in `src/lib/garden.ts`.
+- Photographs in `public/art` (listed in `src/lib/photos.ts`) replace the painted art where they exist; white
+  flower-head cut-outs are tinted by the painter. They are generated stand-ins until Manolia sends real ones.
+- The rest of the art is generated code (`src/lib/botanic`): the hero bouquet, the root that grows out of it down the page,
+  the flowers along it, the shop plates, the composed bouquet, the footer's flower bed and the butterflies.
+  Keep new illustration in the same hand: painted on canvas (`paint.ts`) with cast shadows and scene light,
+  gradient pigment, no outlines, green stems with thickness.
+- Orders never go out as a chat message. Checkout → payment on the provider's page (Whish, card) → the
+  boutique's board at `/atelier` (`src/lib/server`). No cash option online. See the README for the env vars.
+- "Not sure what to send?" opens a conversation with the florist (`/request/…`, `src/lib/server/requests.ts`):
+  proposal, photos, accept, then pay. Never turn it back into a one-click product.
+- Flower facts live in `src/lib/garden.ts`; the compose-your-own recipe and its prices in `src/lib/custom.ts`.

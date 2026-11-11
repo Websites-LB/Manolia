@@ -16,11 +16,13 @@ gsap.registerPlugin(ScrollTrigger);
 const BouquetArt = dynamic(() => import("./bouquet-art").then((m) => m.BouquetArt), { ssr: false });
 
 const WORD = "Manolia";
+/** where the stems are cut, as a transform origin: everything that moves the bouquet pivots here */
+const BASE = "50% 94.5%";
 
 /**
- * Opening shot. Night-forest ground, one engraved bouquet drawing itself in the middle, the name
+ * Opening shot. Night-forest ground, one painted bouquet drawing itself in the middle, the name
  * set enormous behind it so the flowers stand in front of the letters. Copy arrives in sequence.
- * The bouquet leans toward the pointer; on scroll the layers part at different speeds.
+ * The bouquet leans toward the pointer, and the root that runs down the whole page grows out of its stems.
  */
 export function Hero() {
   const root = useRef<HTMLElement>(null);
@@ -39,7 +41,8 @@ export function Hero() {
 
       // layers part as you leave: depth by speed
       const st = { trigger: el, start: "top top", end: "bottom top", scrub: true };
-      gsap.to(art.current, { yPercent: -14, scale: 1.08, ease: "none", scrollTrigger: st });
+      // the bouquet swells from the cut end of its stems, so the root below never loses it
+      gsap.to(art.current, { scale: 1.07, ease: "none", scrollTrigger: st });
       gsap.to(word.current, { yPercent: 38, ease: "none", scrollTrigger: st });
       gsap.to(copy.current, { y: -80, opacity: 0, ease: "none", scrollTrigger: { ...st, end: "60% top" } });
     }, el);
@@ -89,31 +92,22 @@ export function Hero() {
       <div
         ref={art}
         className="pointer-events-none absolute left-1/2 top-[8svh] h-[52svh] -translate-x-1/2 will-change-transform md:top-[5svh] md:h-[86svh]"
-        style={{ aspectRatio: "1000 / 1100", perspective: 1100 }}
+        style={{ aspectRatio: "1000 / 1100", perspective: 1100, transformOrigin: BASE }}
       >
-        <div ref={tilt} className="h-full w-full will-change-transform" style={{ transformStyle: "preserve-3d" }}>
-          <div className="h-full w-full animate-[float_9s_ease-in-out_infinite] motion-reduce:animate-none">
+        <div ref={tilt} className="h-full w-full will-change-transform" style={{ transformStyle: "preserve-3d", transformOrigin: BASE }}>
+          <div className="h-full w-full animate-[sway_9s_ease-in-out_infinite] motion-reduce:animate-none" style={{ transformOrigin: BASE }}>
             <BouquetArt className="h-full w-full" />
           </div>
         </div>
+        {/* the root that runs down the page starts here, at the cut stems */}
+        <span data-anchor data-spread="0.06" className="absolute left-1/2 top-[94.5%] h-px w-px" />
       </div>
+      <span data-via className="absolute bottom-0 left-1/2 hidden h-px w-px md:block" />
+      <span data-via className="absolute right-[14px] top-[74svh] h-px w-px md:hidden" />
 
       {/* copy */}
       <div ref={copy} className="gutter relative z-10 flex h-full flex-col pb-[33vw] pt-24 md:pb-[24vw] md:pt-32">
-        <div className="flex items-start justify-between">
-          <p className="label hero-fade text-line/60">
-            (N°1) Floral design
-            <br />
-            Weddings &amp; events
-          </p>
-          <p className="label hero-fade hidden text-right text-line/60 md:block">
-            Jbeil — Byblos, Lebanon
-            <br />
-            34.12° N, 35.65° E
-          </p>
-        </div>
-
-        <div className="mt-auto grid items-end gap-8 md:grid-cols-[minmax(0,380px)_1fr_minmax(0,260px)]">
+        <div className="mt-auto max-w-[380px]">
           <div>
             <SplitWords
               as="h1"
@@ -134,12 +128,6 @@ export function Hero() {
               </a>
             </div>
           </div>
-          <div />
-          <ul className="label hero-fade hidden space-y-1.5 text-line/55 md:block">
-            <li>— Hand-tied every morning</li>
-            <li>— Weddings, events &amp; table design</li>
-            <li>— Pick-up in Jbeil or delivery</li>
-          </ul>
         </div>
       </div>
 

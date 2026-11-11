@@ -1,4 +1,4 @@
-import { Butterflies } from "@/components/art/butterflies";
+import { Butterflies } from "@/components/art/butterflies-lazy";
 import { Garden } from "@/components/garden/garden";
 import { Hero } from "@/components/hero/hero";
 
@@ -9,8 +9,9 @@ import { Hero } from "@/components/hero/hero";
 export default function Home() {
   return (
     <>
-      <Hero />
-      <Garden />
+      <Garden>
+        <Hero />
+      </Garden>
       <Butterflies />
     </>
   );

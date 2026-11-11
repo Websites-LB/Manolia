@@ -1,9 +1,14 @@
 /**
- * Engraved botanical parts. Every part is drawn the way a copper-plate botanical is: a fine outline,
- * shading by short hatch lines that run from the base of a petal or leaf, and a fill of the ground
- * colour so nearer petals hide the lines behind them.
+ * Botanical parts, painted the way a flower plate is: every petal and leaf is a filled shape whose
+ * colour deepens toward its base and pales toward the edge, with a fine light rim, darker veins from
+ * the base, and green stems with real thickness. Nearer petals cover the ones behind them.
  */
-import { applyAll, bentLine, chain, lerp, rotate, scale, smooth, translate, type Mat, type Pt, type Rng } from "./geometry";
+import { apply, applyAll, bentLine, chain, lerp, lerpPt, rotate, scale, smooth, translate, type Mat, type Pt, type Rng } from "./geometry";
+
+/** A gradient shared by several shapes. Stops are [offset, tone] in the shape's pigment. */
+export type Paint =
+  | { kind: "radial"; m: Mat; r: number; stops: [number, number][] }
+  | { kind: "linear"; a: Pt; b: Pt; stops: [number, number][] };
 
 export type Stroke = {
   d: string;
@@ -11,14 +16,28 @@ export type Stroke = {
   w: number;
   /** stroke opacity */
   o: number;
-  /** filled with the ground colour, so it hides what is behind it */
+  /** a filled shape, so it hides what is behind it */
   fill?: boolean;
-  /** 0–1: how much of the piece's tint colours the fill (hand-coloured print) */
+  /** flat fill: 0 deep shadow · 0.5 the pigment itself · 1 pale highlight */
   tone?: number;
+  /** gradient fill (takes precedence over `tone`) */
+  paint?: Paint;
+  /** line drawn in the pigment at this tone; leave out for the cream ink line */
+  ink?: number;
+  /** pigment for this shape when it differs from its piece (green sepals on a pink bud) */
+  hue?: string;
+  /** how strong a shadow the shape casts and how much scene light it takes: 1 by default, 0 for a flat overlay */
+  sh?: number;
+  /** fill opacity, for glazes laid over another shape */
+  a?: number;
 };
 
-const OUT = 1.7;
+export const LEAF = "#7dab72";
+export const EUCA = "#a3c0b0";
+const GOLD = "#ecc76a";
+const OUT = 1.15;
 const HATCH = 0.75;
+const fillOf = (f: Paint | number) => (typeof f === "number" ? { tone: f } : { paint: f });
 
 /* ─────────────────────────── petals ─────────────────────────── */
 
@@ -39,12 +58,16 @@ type PetalSpec = {
 function petalOutline(s: PetalSpec, r: Rng): Pt[] {
   const pts: Pt[] = [];
   const phase = r.range(0, Math.PI * 2);
+  // no two petals alike: each leans a little to one side, and many have a soft notch at the tip
+  const lean = r.jitter(0.16);
+  const notch = r.next() > 0.45 ? r.range(0.03, 0.09) : 0;
+  const at = r.jitter(0.25);
   const n = 22;
   for (let i = 1; i < n; i++) {
     const th = lerp(-s.spread, s.spread, i / n);
     const u = th / s.spread;
     const base = Math.pow(Math.cos((u * Math.PI) / 2), s.k);
-    const fr = 1 + s.ruffle * Math.sin(th * s.freq + phase) * base + r.jitter(0.025);
+    const fr = (1 + s.ruffle * Math.sin(th * s.freq + phase) * base + r.jitter(0.02)) * (1 + lean * u) * (1 - notch * Math.exp(-Math.pow((u - at) / 0.16, 2)));
     const rr = s.len * base * fr;
     pts.push([rr * Math.sin(th), -rr * Math.cos(th)]);
   }
@@ -60,7 +83,7 @@ function petalHatch(s: PetalSpec, r: Rng): Pt[][] {
     const th = u * s.spread;
     const reach = s.len * Math.pow(Math.cos((u * Math.PI) / 2), s.k);
     const r0 = s.len * r.range(0.06, 0.16);
-    const r1 = reach * r.range(0.32, 0.72);
+    const r1 = reach * r.range(0.5, 0.9);
     const bow = r.jitter(0.06);
     const pts: Pt[] = [0, 0.5, 1].map((t) => {
       const rr = lerp(r0, r1, t);
@@ -72,9 +95,10 @@ function petalHatch(s: PetalSpec, r: Rng): Pt[][] {
   return lines;
 }
 
-function petal(m: Mat, s: PetalSpec, r: Rng, tone: number): Stroke[] {
-  const out: Stroke[] = [{ d: smooth(applyAll(m, petalOutline(s, r)), true), w: OUT, o: 0.95, fill: true, tone }];
-  for (const h of petalHatch(s, r)) out.push({ d: smooth(applyAll(m, h)), w: HATCH, o: 0.62 });
+function petal(m: Mat, s: PetalSpec, r: Rng, fill: Paint | number): Stroke[] {
+  const out: Stroke[] = [{ d: smooth(applyAll(m, petalOutline(s, r)), true), w: OUT, o: 0.72, ink: 0.94, fill: true, ...fillOf(fill) }];
+  // veins: faint, some darker than the petal and some lighter, never a drawn line
+  for (const h of petalHatch(s, r)) out.push({ d: smooth(applyAll(m, h)), w: 0.6, o: r.range(0.14, 0.3), ink: r.next() > 0.45 ? 0.12 : 0.9 });
   if (s.lip) {
     const lip: Pt[] = [];
     for (let i = 0; i <= 8; i++) {
@@ -82,7 +106,7 @@ function petal(m: Mat, s: PetalSpec, r: Rng, tone: number): Stroke[] {
       const rr = s.len * 0.86 * Math.pow(Math.cos((th / s.spread) * (Math.PI / 2)), s.k);
       lip.push([rr * Math.sin(th), -rr * Math.cos(th)]);
     }
-    out.push({ d: smooth(applyAll(m, lip)), w: OUT * 0.8, o: 0.85 });
+    out.push({ d: smooth(applyAll(m, lip)), w: OUT * 0.9, o: 0.3, ink: 0.92 });
   }
   return out;
 }
@@ -116,7 +140,8 @@ const LAYERS: Record<HeadKind, Layer[]> = {
   rose: [
     { count: 5, len: 1, spread: 0.78, k: 0.3, ruffle: 0.03, freq: 5, hatch: 8, base: 0.12, lip: true },
     { count: 5, len: 0.78, spread: 0.74, k: 0.32, ruffle: 0.03, freq: 5, hatch: 6, base: 0.1, lip: true },
-    { count: 4, len: 0.55, spread: 0.85, k: 0.35, ruffle: 0.02, freq: 4, hatch: 4, base: 0.06, lip: true },
+    { count: 5, len: 0.58, spread: 0.8, k: 0.35, ruffle: 0.02, freq: 4, hatch: 4, base: 0.06, lip: true },
+    { count: 4, len: 0.4, spread: 0.9, k: 0.38, ruffle: 0.02, freq: 4, hatch: 2, base: 0.04, lip: true },
   ],
   ranunculus: [
     { count: 12, len: 1, spread: 0.34, k: 0.4, ruffle: 0.02, freq: 6, hatch: 3, base: 0.1 },
@@ -132,9 +157,30 @@ export function head(spec: HeadSpec, r: Rng): Stroke[] {
   const { at, radius, tilt, squash, kind } = spec;
   const frame = chain(translate(at[0], at[1]), rotate(tilt), scale(1, squash));
   const out: Stroke[] = [];
+  // the shade the whole head throws on the leaves and stems behind it
+  const under: Pt[] = Array.from({ length: 14 }, (_, i) => {
+    const a = (i / 14) * Math.PI * 2;
+    return [Math.cos(a) * radius * 0.86, Math.sin(a) * radius * 0.86] as Pt;
+  });
+  out.push({ d: smooth(applyAll(frame, under), true), w: 0, o: 0, fill: true, tone: 0.06, sh: 1.5 });
 
   LAYERS[kind].forEach((layer, li, all) => {
-    const tone = 0.55 + (li / Math.max(1, all.length - 1)) * 0.4;
+    // each ring of petals shares two gradients centred on the heart: deep where the petals tuck in,
+    // pale at their tips, and a touch deeper ring by ring toward the middle
+    const depth = li / Math.max(1, all.length - 1);
+    const R = radius * (layer.len * 1.03 + layer.base);
+    const mk = (shift: number): Paint => ({
+      kind: "radial",
+      m: frame,
+      r: R,
+      stops: [
+        [0, 0.1 + shift],
+        [0.5, lerp(0.42, 0.33, depth) + shift],
+        [1, lerp(0.76, 0.6, depth) + shift],
+      ],
+    });
+    const paints = [mk(0.035), mk(-0.045)];
+    let pi = 0;
     const offset = r.range(0, 360);
     const petals = Array.from({ length: layer.count }, (_, i) => offset + (360 / layer.count) * i + r.jitter(8));
     // paint the petals that face away first, so the ones toward us cover them
@@ -142,7 +188,7 @@ export function head(spec: HeadSpec, r: Rng): Stroke[] {
     for (const a of petals) {
       const len = radius * layer.len * r.range(0.9, 1.06);
       const m = chain(frame, rotate(a), translate(0, -radius * layer.base));
-      out.push(...petal(m, { len, spread: layer.spread * r.range(0.9, 1.1), k: layer.k, ruffle: layer.ruffle, freq: layer.freq, hatch: layer.hatch, lip: layer.lip }, r, tone * r.range(0.9, 1.08)));
+      out.push(...petal(m, { len, spread: layer.spread * r.range(0.9, 1.1), k: layer.k, ruffle: layer.ruffle, freq: layer.freq, hatch: layer.hatch, lip: layer.lip }, r, paints[pi++ % 2]));
     }
   });
 
@@ -156,7 +202,7 @@ export function head(spec: HeadSpec, r: Rng): Stroke[] {
       const rr = radius * 0.36 * (1 - t * 0.85) + r.jitter(0.6);
       pts.push([Math.cos(a) * rr, Math.sin(a) * rr]);
     }
-    out.push({ d: smooth(applyAll(frame, pts)), w: OUT, o: 0.95, fill: true, tone: 0.9 });
+    out.push({ d: smooth(applyAll(frame, pts)), w: OUT, o: 0.7, ink: 0.92, fill: true, tone: 0.24 });
   } else if (kind === "peony") {
     for (let i = 0; i < 9; i++) {
       const a = r.range(0, Math.PI * 2);
@@ -167,7 +213,13 @@ export function head(spec: HeadSpec, r: Rng): Stroke[] {
         const q = radius * (0.06 + j * 0.012);
         return [c[0] + Math.cos(b) * q, c[1] + Math.sin(b) * q] as Pt;
       });
-      out.push({ d: smooth(applyAll(frame, arc)), w: OUT * 0.8, o: 0.9 });
+      out.push({ d: smooth(applyAll(frame, arc)), w: OUT * 0.8, o: 0.6, ink: 0.9 });
+    }
+    // a few golden stamens showing through the heart
+    for (let i = 0; i < 11; i++) {
+      const a = r.range(0, Math.PI * 2);
+      const q = radius * r.range(0, 0.075);
+      out.push({ d: dot(applyAll(frame, [[Math.cos(a) * q, Math.sin(a) * q]])[0], radius * 0.014 + 0.9), w: 0.5, o: 0.5, fill: true, tone: r.range(0.45, 0.8), hue: GOLD });
     }
   } else if (kind === "ranunculus") {
     const pts: Pt[] = Array.from({ length: 12 }, (_, i) => {
@@ -175,7 +227,7 @@ export function head(spec: HeadSpec, r: Rng): Stroke[] {
       const rr = radius * 0.12 * (1 + r.jitter(0.12));
       return [Math.cos(a) * rr, Math.sin(a) * rr] as Pt;
     });
-    out.push({ d: smooth(applyAll(frame, pts), true), w: OUT, o: 0.95, fill: true, tone: 0.2 });
+    out.push({ d: smooth(applyAll(frame, pts), true), w: OUT, o: 0.7, ink: 0.85, fill: true, tone: 0.42, hue: "#a9c77c" });
   } else if (kind === "anemone") {
     // dark velvet eye and a crown of stamens
     const eye: Pt[] = Array.from({ length: 12 }, (_, i) => {
@@ -183,19 +235,19 @@ export function head(spec: HeadSpec, r: Rng): Stroke[] {
       const rr = radius * 0.2 * (1 + r.jitter(0.06));
       return [Math.cos(a) * rr, Math.sin(a) * rr] as Pt;
     });
-    out.push({ d: smooth(applyAll(frame, eye), true), w: OUT, o: 0.95, fill: true, tone: 0 });
+    out.push({ d: smooth(applyAll(frame, eye), true), w: OUT, o: 0.6, fill: true, tone: 0.3, hue: "#2b2136" });
     for (let i = 0; i < 26; i++) {
       const a = (i / 26) * Math.PI * 2 + r.jitter(0.08);
       const r1 = radius * r.range(0.3, 0.42);
       const p1: Pt = [Math.cos(a) * radius * 0.2, Math.sin(a) * radius * 0.2];
       const p2: Pt = [Math.cos(a) * r1, Math.sin(a) * r1];
-      out.push({ d: smooth(applyAll(frame, [p1, p2])), w: HATCH, o: 0.8 });
-      out.push({ d: dot(applyAll(frame, [p2])[0], 2.1), w: OUT * 0.8, o: 0.9 });
+      out.push({ d: smooth(applyAll(frame, [p1, p2])), w: HATCH, o: 0.8, ink: 0.2, hue: "#2b2136" });
+      out.push({ d: dot(applyAll(frame, [p2])[0], 2.1), w: 0.5, o: 0.6, fill: true, tone: 0.2, hue: "#2b2136" });
     }
     for (let i = 0; i < 18; i++) {
       const a = r.range(0, Math.PI * 2);
       const q = radius * r.range(0.02, 0.15);
-      out.push({ d: dot(applyAll(frame, [[Math.cos(a) * q, Math.sin(a) * q]])[0], 1.2), w: OUT, o: 0.8 });
+      out.push({ d: dot(applyAll(frame, [[Math.cos(a) * q, Math.sin(a) * q]])[0], 1.2), w: 0.6, o: 0.7, fill: true, tone: 0.75, hue: "#8f86a8" });
     }
   }
   return out;
@@ -225,7 +277,14 @@ export function bud(at: Pt, size: number, angle: number, r: Rng): Stroke[] {
     const w = size * 0.42 * Math.sin(a) * (1 - 0.55 * Math.pow((-y / size), 1.6));
     body.push([w, y]);
   }
-  out.push({ d: smooth(applyAll(m, body), true), w: OUT, o: 0.95, fill: true, tone: 0.6 });
+  out.push({
+    d: smooth(applyAll(m, body), true),
+    w: OUT,
+    o: 0.7,
+    ink: 0.92,
+    fill: true,
+    paint: { kind: "linear", a: apply(m, [0, 0]), b: apply(m, [0, -size]), stops: [[0, 0.2], [0.6, 0.45], [1, 0.66]] },
+  });
   // the petal seams spiralling up
   for (let i = 0; i < 3; i++) {
     const x0 = lerp(-0.3, 0.3, i / 2) * size;
@@ -234,12 +293,12 @@ export function bud(at: Pt, size: number, angle: number, r: Rng): Stroke[] {
       [x0 + r.jitter(2), -size * 0.5],
       [x0 * 0.3, -size * 0.92],
     ];
-    out.push({ d: smooth(applyAll(m, seam)), w: HATCH * 1.2, o: 0.7 });
+    out.push({ d: smooth(applyAll(m, seam)), w: HATCH * 1.2, o: 0.6, ink: 0.12 });
   }
   for (let i = 0; i < 9; i++) {
     const x0 = r.range(0.05, 0.38) * size;
     const y0 = -r.range(0.15, 0.55) * size;
-    out.push({ d: smooth(applyAll(m, [[x0, y0], [x0 * 0.85, y0 - size * r.range(0.15, 0.3)]])), w: HATCH, o: 0.5 });
+    out.push({ d: smooth(applyAll(m, [[x0, y0], [x0 * 0.85, y0 - size * r.range(0.15, 0.3)]])), w: HATCH, o: 0.45, ink: 0.1 });
   }
   // sepals
   for (const side of [-1, 1, 0]) {
@@ -250,7 +309,7 @@ export function bud(at: Pt, size: number, angle: number, r: Rng): Stroke[] {
       [side * size * 0.26 * s + r.jitter(2), -size * 0.42],
       [side * size * 0.12 * s, -size * 0.18],
     ];
-    out.push({ d: smooth(applyAll(m, sep), true), w: OUT, o: 0.95, fill: true, tone: 0.05 });
+    out.push({ d: smooth(applyAll(m, sep), true), w: OUT * 0.9, o: 0.6, ink: 0.8, fill: true, tone: 0.3, hue: LEAF });
   }
   return out;
 }
@@ -269,9 +328,25 @@ export function leaf(at: Pt, len: number, width: number, angle: number, bend: nu
   const outline: Pt[] = [];
   for (let i = 0; i <= n; i++) outline.push(side(i / n, -1));
   for (let i = n - 1; i > 0; i--) outline.push(side(i / n, 1));
-  const out: Stroke[] = [{ d: smooth(applyAll(m, outline), true), w: OUT, o: 0.95, fill: true, tone: r.range(0.3, 0.45) }];
+  const lift = r.range(-0.04, 0.05);
+  const out: Stroke[] = [
+    {
+      d: smooth(applyAll(m, outline), true),
+      w: OUT,
+      o: 0.6,
+      ink: 0.82,
+      fill: true,
+      hue: LEAF,
+      paint: { kind: "linear", a: apply(m, [0, 0]), b: apply(m, [bend * len, -len]), stops: [[0, 0.16 + lift], [0.55, 0.36 + lift], [1, 0.52 + lift]] },
+    },
+  ];
+  // the half that turns away from the light is a shade darker
+  const half: Pt[] = [];
+  for (let i = 0; i <= n; i++) half.push([bend * len * (i / n) * (i / n), -len * (i / n)]);
+  for (let i = n - 1; i > 0; i--) half.push(side(i / n, 1));
+  out.push({ d: smooth(applyAll(m, half), true), w: 0, o: 0, fill: true, tone: 0.06, hue: LEAF, sh: 0, a: 0.34 });
   const rib: Pt[] = [0, 0.25, 0.5, 0.75, 0.97].map((t) => [bend * len * t * t, -len * t]);
-  out.push({ d: smooth(applyAll(m, rib)), w: OUT * 0.75, o: 0.85 });
+  out.push({ d: smooth(applyAll(m, rib)), w: OUT * 0.9, o: 0.6, ink: 0.78, hue: LEAF });
   const veins = Math.round(len / 22);
   for (let i = 1; i < veins; i++) {
     const t = i / veins;
@@ -280,14 +355,14 @@ export function leaf(at: Pt, len: number, width: number, angle: number, bend: nu
       const t2 = Math.min(0.98, t + 0.13);
       const b = side(t2, s);
       const tip: Pt = [lerp(a[0], b[0], 0.88), lerp(a[1], b[1], 0.88)];
-      out.push({ d: smooth(applyAll(m, [a, lerpPtBow(a, tip, 0.5, s * 2), tip])), w: HATCH, o: 0.6 });
+      out.push({ d: smooth(applyAll(m, [a, lerpPtBow(a, tip, 0.5, s * 2), tip])), w: HATCH, o: 0.34, ink: 0.72, hue: LEAF });
       if (s === 1) {
         // shade the far half with short strokes between the veins
         for (let k = 0; k < 2; k++) {
           const tt = t + 0.035 + k * 0.03;
           const c: Pt = [bend * len * tt * tt + 3, -len * tt];
           const e = side(Math.min(0.98, tt + 0.1), 1);
-          out.push({ d: smooth(applyAll(m, [c, [lerp(c[0], e[0], 0.6), lerp(c[1], e[1], 0.6) + r.jitter(1)]])), w: HATCH * 0.8, o: 0.4 });
+          out.push({ d: smooth(applyAll(m, [c, [lerp(c[0], e[0], 0.6), lerp(c[1], e[1], 0.6) + r.jitter(1)]])), w: HATCH * 0.8, o: 0.22, ink: 0.04, hue: LEAF });
         }
       }
     }
@@ -304,20 +379,31 @@ const lerpPtBow = (a: Pt, b: Pt, t: number, bow: number): Pt => {
 
 /* ─────────────────────────── stems & sprays ─────────────────────────── */
 
-export function stem(a: Pt, b: Pt, bend: number, double: boolean, r: Rng): Stroke[] {
+/** A stem with real thickness: a green ribbon that tapers from the cut end up to the flower. */
+export function stem(a: Pt, b: Pt, bend: number, thick: boolean, r: Rng, width = thick ? 7 : 4.6, hue = LEAF): Stroke[] {
   const pts = bentLine(a, b, bend, 8, r, 1.2);
-  const out: Stroke[] = [{ d: smooth(pts), w: OUT, o: 0.9 }];
-  if (double) {
-    const off = bentLine([a[0] + 3.2, a[1]], [b[0] + 2.4, b[1]], bend, 8, r, 0.6);
-    out.push({ d: smooth(off), w: OUT * 0.7, o: 0.65 });
-  }
+  const left: Pt[] = [];
+  const right: Pt[] = [];
+  pts.forEach((p, i) => {
+    const q = pts[Math.min(pts.length - 1, i + 1)];
+    const o = pts[Math.max(0, i - 1)];
+    const dx = q[0] - o[0];
+    const dy = q[1] - o[1];
+    const l = Math.hypot(dx, dy) || 1;
+    const h = (width / 2) * lerp(1, 0.55, i / (pts.length - 1));
+    left.push([p[0] - (dy / l) * h, p[1] + (dx / l) * h]);
+    right.push([p[0] + (dy / l) * h, p[1] - (dx / l) * h]);
+  });
+  const out: Stroke[] = [{ d: smooth([...left, ...right.reverse()], true, 0.9), w: 0.9, o: 0.55, ink: 0.78, fill: true, tone: 0.3, hue, sh: 0.7 }];
+  // the lit edge
+  if (width > 3.4) out.push({ d: smooth(left.map((p, i) => lerpPt(p, pts[i], 0.45))), w: HATCH, o: 0.5, ink: 0.7, hue });
   return out;
 }
 
 /** Silver-dollar eucalyptus: a wandering stalk with pairs of round leaves that shrink toward the tip. */
 export function eucalyptus(a: Pt, b: Pt, bend: number, r: Rng): Stroke[] {
   const pts = bentLine(a, b, bend, 12, r, 3);
-  const out: Stroke[] = [{ d: smooth(pts), w: OUT * 0.85, o: 0.85 }];
+  const out: Stroke[] = [{ d: smooth(pts), w: 2.6, o: 0.95, ink: 0.3, hue: EUCA }];
   const pairs = 7;
   for (let i = 1; i <= pairs; i++) {
     const t = i / (pairs + 0.6);
@@ -332,8 +418,17 @@ export function eucalyptus(a: Pt, b: Pt, bend: number, r: Rng): Stroke[] {
         const a2 = (k / 12) * Math.PI * 2;
         return [Math.cos(a2) * size * 0.82 + size, Math.sin(a2) * size * (0.95 + r.jitter(0.05))] as Pt;
       });
-      out.push({ d: smooth(applyAll(m, disc), true), w: OUT * 0.9, o: 0.9, fill: true, tone: r.range(0.25, 0.45) });
-      out.push({ d: smooth(applyAll(m, [[2, 0], [size, r.jitter(2)], [size * 1.7, 0]])), w: HATCH, o: 0.55 });
+      const lift = r.range(-0.06, 0.08);
+      out.push({
+        d: smooth(applyAll(m, disc), true),
+        w: OUT * 0.9,
+        o: 0.6,
+        ink: 0.88,
+        fill: true,
+        hue: EUCA,
+        paint: { kind: "linear", a: apply(m, [0, 0]), b: apply(m, [size * 1.8, 0]), stops: [[0, 0.2 + lift], [1, 0.5 + lift]] },
+      });
+      out.push({ d: smooth(applyAll(m, [[2, 0], [size, r.jitter(2)], [size * 1.7, 0]])), w: HATCH, o: 0.55, ink: 0.8, hue: EUCA });
     }
   }
   return out;
@@ -345,9 +440,9 @@ export function gypsophila(at: Pt, angle: number, len: number, r: Rng): Stroke[]
   const grow = (p: Pt, ang: number, l: number, depth: number) => {
     const rad = ((ang - 90) * Math.PI) / 180;
     const q: Pt = [p[0] + Math.cos(rad) * l, p[1] + Math.sin(rad) * l];
-    out.push({ d: smooth([p, [lerp(p[0], q[0], 0.5) + r.jitter(2), lerp(p[1], q[1], 0.5) + r.jitter(2)], q]), w: HATCH * 1.1, o: 0.75 });
+    out.push({ d: smooth([p, [lerp(p[0], q[0], 0.5) + r.jitter(2), lerp(p[1], q[1], 0.5) + r.jitter(2)], q]), w: HATCH * 1.1, o: 0.8, ink: 0.55, hue: "#a9bf93" });
     if (depth === 0) {
-      out.push({ d: dot(q, r.range(2.6, 3.8)), w: OUT * 0.75, o: 0.95 });
+      out.push({ d: dot(q, r.range(2.8, 4.2)), w: 0.6, o: 0.6, ink: 1, fill: true, tone: r.range(0.62, 0.95), hue: "#f6efdf" });
       return;
     }
     const kids = depth > 1 ? 2 + (r.next() > 0.6 ? 1 : 0) : 3;
@@ -369,8 +464,8 @@ export function ribbon(at: Pt, r: Rng): Stroke[] {
     [x, y + 9],
     [x - 33, y + 13],
   ];
-  out.push({ d: smooth(band, true, 0.4), w: OUT, o: 0.95, fill: true, tone: 0.55 });
-  for (let i = 0; i < 6; i++) out.push({ d: smooth([[x - 30 + i * 12, y - 9], [x - 31 + i * 12, y + 10]]), w: HATCH, o: 0.45 });
+  out.push({ d: smooth(band, true, 0.4), w: OUT, o: 0.7, ink: 0.95, fill: true, tone: 0.5 });
+  for (let i = 0; i < 6; i++) out.push({ d: smooth([[x - 30 + i * 12, y - 9], [x - 31 + i * 12, y + 10]]), w: HATCH, o: 0.45, ink: 0.15 });
   const tail = (s: number, len: number) => {
     const pts: Pt[] = [];
     for (let i = 0; i <= 8; i++) {
@@ -380,8 +475,8 @@ export function ribbon(at: Pt, r: Rng): Stroke[] {
     const back = pts.map(([px, py], i) => [px + s * (7 + i * 0.6), py + 4] as Pt).reverse();
     return smooth([...pts, ...back], true, 0.8);
   };
-  out.push({ d: tail(-1, 120), w: OUT, o: 0.95, fill: true, tone: 0.55 });
-  out.push({ d: tail(1, 96), w: OUT, o: 0.95, fill: true, tone: 0.55 });
+  out.push({ d: tail(-1, 120), w: OUT, o: 0.7, ink: 0.95, fill: true, tone: 0.36 });
+  out.push({ d: tail(1, 96), w: OUT, o: 0.7, ink: 0.95, fill: true, tone: 0.42 });
   for (const s of [-1, 1]) {
     const loop: Pt[] = [
       [x, y],
@@ -390,14 +485,14 @@ export function ribbon(at: Pt, r: Rng): Stroke[] {
       [x + s * 74, y + 8],
       [x + s * 34, y + 6],
     ];
-    out.push({ d: smooth(loop, true, 0.9), w: OUT, o: 0.95, fill: true, tone: 0.55 });
-    out.push({ d: smooth([[x + s * 12, y - 2], [x + s * 46, y - 20], [x + s * 70, y - 10]]), w: HATCH, o: 0.55 });
+    out.push({ d: smooth(loop, true, 0.9), w: OUT, o: 0.7, ink: 0.95, fill: true, tone: s < 0 ? 0.56 : 0.48 });
+    out.push({ d: smooth([[x + s * 12, y - 2], [x + s * 46, y - 20], [x + s * 70, y - 10]]), w: HATCH, o: 0.55, ink: 0.15 });
   }
   const knot: Pt[] = Array.from({ length: 10 }, (_, i) => {
     const a = (i / 10) * Math.PI * 2;
     return [x + Math.cos(a) * 12, y + Math.sin(a) * 10] as Pt;
   });
-  out.push({ d: smooth(knot, true), w: OUT, o: 0.95, fill: true, tone: 0.55 });
+  out.push({ d: smooth(knot, true), w: OUT, o: 0.7, ink: 0.95, fill: true, tone: 0.64 });
   return out;
 }
 
@@ -412,7 +507,7 @@ export function hydrangea(at: Pt, radius: number, r: Rng): Stroke[] {
     const a = (i / 16) * Math.PI * 2;
     return [at[0] + Math.cos(a) * radius * 0.96, at[1] + Math.sin(a) * radius * 0.74] as Pt;
   });
-  out.push({ d: smooth(dome, true), w: OUT * 0.6, o: 0.4, fill: true, tone: 0.3 });
+  out.push({ d: smooth(dome, true), w: OUT * 0.6, o: 0.3, ink: 0.3, fill: true, tone: 0.1 });
   for (let i = 0; i < 400 && florets.length < 72; i++) {
     const a = r.range(0, Math.PI * 2);
     const d = Math.sqrt(r.next());
@@ -426,9 +521,9 @@ export function hydrangea(at: Pt, radius: number, r: Rng): Stroke[] {
     const size = radius * r.range(0.15, 0.19);
     const frame = chain(translate(f[0], f[1]), rotate(r.range(0, 90)), scale(1, lerp(0.95, 0.6, rim)));
     for (let k = 0; k < 4; k++) {
-      out.push(...petal(chain(frame, rotate(k * 90 + r.jitter(8))), { len: size, spread: 0.62, k: 0.3, ruffle: 0.02, freq: 4, hatch: 2 }, r, r.range(0.55, 0.95)));
+      out.push(...petal(chain(frame, rotate(k * 90 + r.jitter(8))), { len: size, spread: 0.62, k: 0.3, ruffle: 0.02, freq: 4, hatch: 2 }, r, lerp(0.62, 0.3, rim * rim) + r.jitter(0.1)));
     }
-    out.push({ d: dot(f, size * 0.12), w: OUT * 0.8, o: 0.9 });
+    out.push({ d: dot(f, size * 0.13), w: 0.5, o: 0.6, fill: true, tone: 0.7, hue: "#f1e9c9" });
   }
   return out;
 }
@@ -457,11 +552,18 @@ export function tulip(at: Pt, size: number, angle: number, r: Rng): Stroke[] {
   ];
   for (const p of petals) {
     const m = chain(translate(at[0], at[1]), rotate(angle), translate(p.x, 0), rotate(p.rot));
-    out.push({ d: smooth(applyAll(m, shape(p.w, p.h)), true), w: OUT, o: 0.95, fill: true, tone: p.tone });
+    out.push({
+      d: smooth(applyAll(m, shape(p.w, p.h)), true),
+      w: OUT,
+      o: 0.7,
+      ink: 0.94,
+      fill: true,
+      paint: { kind: "linear", a: apply(m, [0, 0]), b: apply(m, [0, -p.h]), stops: [[0, p.tone * 0.3], [0.55, p.tone * 0.62], [1, p.tone * 0.86]] },
+    });
     for (let k = 0; k < 6; k++) {
       const x = r.range(-0.6, 0.7) * p.w;
       const y0 = -p.h * r.range(0.05, 0.2);
-      out.push({ d: smooth(applyAll(m, [[x * 0.5, y0], [x, y0 - p.h * 0.3], [x * 0.8, y0 - p.h * r.range(0.4, 0.6)]])), w: HATCH, o: 0.55 });
+      out.push({ d: smooth(applyAll(m, [[x * 0.5, y0], [x, y0 - p.h * 0.3], [x * 0.8, y0 - p.h * r.range(0.4, 0.6)]])), w: HATCH, o: 0.5, ink: 0.1 });
     }
   }
   return out;

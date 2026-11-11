@@ -4,7 +4,8 @@
 /*
  * Manolia — design tokens.
  * Two grounds (night forest, paper), one ink line colour and a few flower tints.
- * Type: Instrument Serif for display (huge), Geist for reading (one size), Geist Mono for labels (tiny).
+ * Type: one face, Instrument Serif, the one the name is set in. Huge for display, plain for reading,
+ * small spaced capitals for labels. Contrast comes from size, case and italics, never a second font.
  */
 @theme {
   --color-night: #0f1b13;
@@ -24,9 +25,30 @@
     from { transform: translate3d(0, 0, 0); }
     to { transform: translate3d(-50%, 0, 0); }
   }
-  @keyframes float {
-    0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
-    50% { transform: translate3d(0, -0.8%, 0) rotate(0.6deg); }
+  /* a held bouquet: it only ever pivots about the cut end of its stems */
+  @keyframes sway {
+    0%, 100% { transform: rotate(-0.45deg); }
+    50% { transform: rotate(0.6deg); }
+  }
+  /* shop pieces rising into place, and the composed bouquet settling after each change */
+  @keyframes rise {
+    from { opacity: 0; transform: translate3d(0, 50px, 0); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes settle {
+    from { opacity: 0.35; transform: scale(0.975); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes arrive {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  /* fireflies over the flower bed: a slow wander and a slower pulse */
+  @keyframes firefly {
+    0%, 100% { transform: translate3d(0, 0, 0); opacity: 0; }
+    15% { opacity: 0.9; }
+    50% { transform: translate3d(var(--dx), var(--dy), 0); opacity: 0.35; }
+    80% { opacity: 0.9; }
   }
   @keyframes cue {
     0% { transform: scaleY(0); transform-origin: top; }
@@ -39,8 +61,8 @@
 /* next/font puts its variables on <body>, so the stacks are inlined rather than read from :root */
 @theme inline {
   --font-serif: var(--font-instrument), "Times New Roman", serif;
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-instrument), "Times New Roman", serif;
+  --font-mono: var(--font-instrument), "Times New Roman", serif;
 }
 
 @layer base {
@@ -51,7 +73,10 @@
     text-rendering: optimizeLegibility;
   }
   body {
-    font-family: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-instrument), "Times New Roman", serif;
+    /* Instrument Serif has a low x-height: this sets reading text by its x-height, so every small size
+       stays as legible as before without touching each one. Display type opts out below. */
+    font-size-adjust: 0.5;
     background: var(--color-paper);
     font-size: 15px;
     line-height: 1.6;
@@ -75,10 +100,10 @@
 @layer components {
   /* tiny monospaced labels: the second voice of the type system */
   .label {
-    font-family: var(--font-geist-mono), ui-monospace, monospace;
-    font-size: 11px;
+    font-family: var(--font-instrument), "Times New Roman", serif;
+    font-size: 11.5px;
     line-height: 1.4;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
   }
   /* huge display serif */
@@ -87,6 +112,7 @@
     font-weight: 400;
     letter-spacing: -0.035em;
     line-height: 0.88;
+    font-size-adjust: none;
   }
   .display em { font-style: italic; letter-spacing: -0.02em; }
 
@@ -113,9 +139,9 @@
     gap: 0.75rem;
     border-radius: 999px;
     padding: 1rem 1.6rem;
-    font-family: var(--font-geist-mono), ui-monospace, monospace;
-    font-size: 11px;
-    letter-spacing: 0.06em;
+    font-family: var(--font-instrument), "Times New Roman", serif;
+    font-size: 11.5px;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     transition: background-color 0.6s var(--ease-out-expo), color 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
   }
@@ -167,6 +193,28 @@
     border: 1px solid color-mix(in oklab, var(--color-ink) 18%, transparent);
   }
   .qty:hover { border-color: var(--color-ink); }
+
+  /* the budget slider: a hairline with one round handle */
+  .budget { appearance: none; height: 1.5rem; background: transparent; cursor: pointer; }
+  .budget::-webkit-slider-runnable-track { height: 1px; background: color-mix(in oklab, var(--color-ink) 30%, transparent); }
+  .budget::-moz-range-track { height: 1px; background: color-mix(in oklab, var(--color-ink) 30%, transparent); }
+  .budget::-webkit-slider-thumb { appearance: none; margin-top: -0.6rem; height: 1.25rem; width: 1.25rem; border-radius: 999px; background: var(--color-night); border: 3px solid var(--color-paper); box-shadow: 0 0 0 1px var(--color-night); transition: transform 0.5s var(--ease-out-expo); }
+  .budget::-moz-range-thumb { height: 0.9rem; width: 0.9rem; border-radius: 999px; background: var(--color-night); border: 3px solid var(--color-paper); box-shadow: 0 0 0 1px var(--color-night); }
+  .budget:active::-webkit-slider-thumb { transform: scale(1.25); }
+
+  .qty-dark {
+    display: flex;
+    height: 2rem;
+    width: 2rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--color-line) 25%, transparent);
+    color: var(--color-line);
+    transition: border-color 0.5s var(--ease-out-expo), background-color 0.5s var(--ease-out-expo), color 0.5s var(--ease-out-expo), opacity 0.5s var(--ease-out-expo);
+  }
+  .qty-dark:hover:not(:disabled) { border-color: var(--color-paper); background: var(--color-paper); color: var(--color-night); }
+  .qty-dark:disabled { opacity: 0.3; }
 }
 
 /* butterfly wingbeat: the wing folds toward the body (seen from above) */

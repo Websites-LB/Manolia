@@ -11,7 +11,7 @@ export type Kind = HeadKind | "hydrangea" | "tulip" | "gypsophila" | "eucalyptus
 export const SPECIMEN_VIEW = { w: 400, h: 640 };
 const SAGE = "#8fb08a";
 
-const bloom = (kind: Kind, at: Pt, radius: number, tilt: number, r: Rng): Stroke[] => {
+export const bloom = (kind: Kind, at: Pt, radius: number, tilt: number, r: Rng): Stroke[] => {
   switch (kind) {
     case "hydrangea":
       return hydrangea(at, radius, r);
@@ -33,7 +33,7 @@ export function buildSpecimen(kind: Kind, tint: string, seed = 1): Piece[] {
   const add = (id: string, strokes: Stroke[], t = SAGE) => pieces.push({ id, strokes, tint: t, sway: 0 });
 
   if (kind === "gypsophila") {
-    add("stems", [...stem(base, [150, 260], 26, false, r), ...stem(base, [250, 230], -24, false, r), ...stem(base, [205, 210], -6, false, r)]);
+    add("stems", [...stem(base, [150, 260], 26, false, r, 2.6), ...stem(base, [250, 230], -24, false, r, 2.6), ...stem(base, [205, 210], -6, false, r, 2.6)]);
     add("spray-a", gypsophila([150, 260], -30, 64, r), tint);
     add("spray-b", gypsophila([250, 230], 28, 60, r), tint);
     add("spray-c", gypsophila([205, 210], 4, 64, r), tint);
@@ -61,40 +61,64 @@ export function buildSpecimen(kind: Kind, tint: string, seed = 1): Piece[] {
   return pieces;
 }
 
+/** A round hat box seen slightly from above; whatever is drawn after it sits in its rim. */
+export function hatBox(cx: number, rimY: number, rx: number, ry: number): Stroke[] {
+  const ell: Pt[] = Array.from({ length: 24 }, (_, i) => [cx + Math.cos((i / 24) * Math.PI * 2) * rx, rimY + Math.sin((i / 24) * Math.PI * 2) * ry] as Pt);
+  const body: Pt[] = [
+    [cx - rx, rimY],
+    [cx - rx + 4, rimY + 120],
+    [cx - rx * 0.7, rimY + 166],
+    [cx, rimY + 178],
+    [cx + rx * 0.7, rimY + 166],
+    [cx + rx - 4, rimY + 120],
+    [cx + rx, rimY],
+  ];
+  const box: Stroke[] = [
+    { d: smoothPath(body, true), w: 1.2, o: 0.7, ink: 0.9, fill: true, paint: { kind: "linear", a: [cx - rx, 0], b: [cx + rx, 0], stops: [[0, 0.3], [0.32, 0.58], [1, 0.16]] } },
+  ];
+  for (let i = 0; i < 26; i++) {
+    const x = lerp(cx - rx + 14, cx + rx - 14, i / 25);
+    const sag = Math.sqrt(1 - Math.pow((x - cx) / rx, 2)) * ry;
+    box.push({ d: smoothPath([[x, rimY + sag + 6], [x, rimY + sag + 110 + (1 - Math.abs(x - cx) / rx) * 40]]), w: 0.7, o: 0.3, ink: 0.1 });
+  }
+  box.push({ d: smoothPath(ell, true), w: 1.2, o: 0.7, ink: 0.9, fill: true, tone: 0.08 });
+  return box;
+}
+
+/** A plain glass vase, drawn as its outline and the lights on it so the stems show through. */
+export function glassVase(): Stroke[] {
+  const vase: Pt[] = [
+    [240, 470],
+    [214, 560],
+    [222, 680],
+    [300, 712],
+    [378, 680],
+    [386, 560],
+    [360, 470],
+  ];
+  return [
+    { d: smoothPath(vase, false), w: 1.7, o: 0.95 },
+    { d: smoothPath([[226, 560], [232, 660], [270, 690]]), w: 0.9, o: 0.45 },
+    { d: smoothPath([[230, 600], [370, 600]]), w: 0.8, o: 0.35 },
+    { d: smoothPath([[244, 470], [356, 470]]), w: 1.4, o: 0.8 },
+    { d: smoothPath([[364, 500], [374, 570], [370, 650]]), w: 2.4, o: 0.25 },
+  ];
+}
+
 export type Style = "posy" | "box" | "vase";
 export const PLATE_VIEW = { w: 600, h: 750 };
 
 /** A small arrangement for a shop plate: a hand-tied posy, a hat box packed with heads, or a glass vase. */
-export function buildArrangement(kind: Kind, style: Style, tint: string, seed = 1): Piece[] {
+export function buildArrangement(kind: Kind, style: Style, tint: string, seed = 1, boxTint = "#d8c4a6"): Piece[] {
   const r = rng(seed);
   const pieces: Piece[] = [];
   const add = (id: string, strokes: Stroke[], t = SAGE) => pieces.push({ id, strokes, tint: t, sway: 0 });
   const radius = kind === "hydrangea" ? 96 : kind === "peony" ? 92 : 82;
 
   if (style === "box") {
-    // round hat box seen slightly from above, heads packed into its rim
     const cx = 300;
     const rimY = 430;
-    const rx = 200;
-    const ry = 56;
-    const ell = (y: number, s = 1): Pt[] => Array.from({ length: 24 }, (_, i) => [cx + Math.cos((i / 24) * Math.PI * 2) * rx * s, y + Math.sin((i / 24) * Math.PI * 2) * ry * s] as Pt);
-    const body: Pt[] = [
-      [cx - rx, rimY],
-      [cx - rx + 4, rimY + 120],
-      [cx - rx * 0.7, rimY + 166],
-      [cx, rimY + 178],
-      [cx + rx * 0.7, rimY + 166],
-      [cx + rx - 4, rimY + 120],
-      [cx + rx, rimY],
-    ];
-    const box: Stroke[] = [{ d: smoothPath(body, true), w: 1.7, o: 0.95, fill: true, tone: 0.1 }];
-    for (let i = 0; i < 26; i++) {
-      const x = lerp(cx - rx + 14, cx + rx - 14, i / 25);
-      const sag = Math.sqrt(1 - Math.pow((x - cx) / rx, 2)) * ry;
-      box.push({ d: smoothPath([[x, rimY + sag + 6], [x, rimY + sag + 110 + (1 - Math.abs(x - cx) / rx) * 40]]), w: 0.7, o: 0.35 });
-    }
-    box.push({ d: smoothPath(ell(rimY), true), w: 1.7, o: 0.95, fill: true, tone: 0.05 });
-    add("box", box, "#e8d9c4");
+    add("box", hatBox(cx, rimY, 200, 56), boxTint);
     const heads: Pt[] = [];
     const big = radius * 1.18;
     for (let row = 0; row < 2; row++) {
@@ -107,15 +131,6 @@ export function buildArrangement(kind: Kind, style: Style, tint: string, seed = 
   }
 
   if (style === "vase") {
-    const vase: Pt[] = [
-      [240, 470],
-      [214, 560],
-      [222, 680],
-      [300, 712],
-      [378, 680],
-      [386, 560],
-      [360, 470],
-    ];
     const stems: Stroke[] = [];
     const tops: Pt[] = [
       [210, 250],
@@ -127,11 +142,7 @@ export function buildArrangement(kind: Kind, style: Style, tint: string, seed = 
     add("stems", stems);
     add("leaves", [...leaf([280, 470], 150, 30, -58, 0.16, r), ...leaf([320, 470], 140, 28, 60, -0.16, r)]);
     tops.sort((a, b) => a[1] - b[1]).forEach((t, i) => add(`h${i}`, bloom(kind, t, radius * (i === 0 ? 0.95 : 0.85), r.jitter(14), r), tint));
-    const glass: Stroke[] = [{ d: smoothPath(vase, false), w: 1.7, o: 0.95 }];
-    glass.push({ d: smoothPath([[226, 560], [232, 660], [270, 690]]), w: 0.9, o: 0.45 });
-    glass.push({ d: smoothPath([[230, 600], [370, 600]]), w: 0.8, o: 0.35 });
-    glass.push({ d: smoothPath([[244, 470], [356, 470]]), w: 1.4, o: 0.8 });
-    add("vase", glass, "#c9d8d4");
+    add("vase", glassVase(), "#c9d8d4");
     return pieces;
   }
 

@@ -16,6 +16,11 @@ export type Piece = {
   wash?: Wash;
   /** how much this piece sways in the air, degrees */
   sway: number;
+  /**
+   * A flower head that has a photograph: the painter places the cut-out photo here, tinted to `tint`,
+   * instead of painting the strokes (which remain as the fallback until the photo has loaded).
+   */
+  sprite?: { kind: string; at: Pt; radius: number; tilt: number };
 };
 
 export const VIEW = { w: 1000, h: 1100 };
@@ -37,9 +42,9 @@ export function buildBouquet(seed = 7): Piece[] {
   const add = (id: string, strokes: Stroke[], sway = 0.6, wash?: Wash, tint = C.sage) => pieces.push({ id, strokes, sway, wash, tint });
 
   // back: airy sprays that set the silhouette
-  add("gyp-left", [...stem(TIE, [245, 420], 40, false, r), ...gypsophila([245, 420], -38, 70, r)], 1.4);
-  add("gyp-right", [...stem(TIE, [770, 330], -36, false, r), ...gypsophila([770, 330], 34, 66, r)], 1.4);
-  add("gyp-top", [...stem(TIE, [560, 190], -18, false, r), ...gypsophila([560, 190], 8, 62, r)], 1.2);
+  add("gyp-left", [...stem(TIE, [245, 420], 40, false, r, 2.4), ...gypsophila([245, 420], -38, 70, r)], 1.4);
+  add("gyp-right", [...stem(TIE, [770, 330], -36, false, r, 2.4), ...gypsophila([770, 330], 34, 66, r)], 1.4);
+  add("gyp-top", [...stem(TIE, [560, 190], -18, false, r, 2.4), ...gypsophila([560, 190], 8, 62, r)], 1.2);
   add("euca-left", eucalyptus(TIE, [120, 560], 60, r), 1.1, { cx: 260, cy: 640, rx: 170, ry: 90, color: C.sage, rot: -25 });
   add("euca-right", eucalyptus(TIE, [890, 610], -60, r), 1.1, { cx: 740, cy: 670, rx: 170, ry: 80, color: C.sage, rot: 20 });
 
@@ -100,7 +105,7 @@ export function buildBouquet(seed = 7): Piece[] {
     const x1 = 432 + t * 136 + r.jitter(6);
     const y1 = 1060 + r.jitter(22);
     below.push(...stem([x0, TIE[1] - 10], [x1, y1], r.jitter(5), false, r));
-    below.push({ d: `M${x1 - 3.5} ${y1 + 3}L${x1 + 3.5} ${y1 - 3}`, w: 1.2, o: 0.8 });
+    
   }
   add("gathered", below, 0);
   add("ribbon", ribbon(TIE, r), 0, undefined, C.ribbon);

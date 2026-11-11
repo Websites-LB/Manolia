@@ -84,4 +84,5 @@ export function bentLine(a: Pt, b: Pt, bend: number, steps = 8, r?: Rng, wobble 
 }
 
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+export const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 export const lerpPt = (a: Pt, b: Pt, t: number): Pt => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
