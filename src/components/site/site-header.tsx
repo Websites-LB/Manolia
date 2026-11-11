@@ -33,7 +33,7 @@ export function SiteHeader() {
 
   const nav = [
     ["/shop", "Shop"],
-    ["/#weddings", "Weddings"],
+    ["/#garden", "Flowers"],
   ];
 
   return (

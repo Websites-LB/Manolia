@@ -400,3 +400,69 @@ export function ribbon(at: Pt, r: Rng): Stroke[] {
   out.push({ d: smooth(knot, true), w: OUT, o: 0.95, fill: true, tone: 0.55 });
   return out;
 }
+
+/* ─────────────────────────── hydrangea & tulip ─────────────────────────── */
+
+/** A hydrangea mophead: a dome of small four-petalled florets, painted from the back to the front. */
+export function hydrangea(at: Pt, radius: number, r: Rng): Stroke[] {
+  const out: Stroke[] = [];
+  const florets: Pt[] = [];
+  // the dome itself, so gaps between florets read as shadowed florets behind
+  const dome: Pt[] = Array.from({ length: 16 }, (_, i) => {
+    const a = (i / 16) * Math.PI * 2;
+    return [at[0] + Math.cos(a) * radius * 0.96, at[1] + Math.sin(a) * radius * 0.74] as Pt;
+  });
+  out.push({ d: smooth(dome, true), w: OUT * 0.6, o: 0.4, fill: true, tone: 0.3 });
+  for (let i = 0; i < 400 && florets.length < 72; i++) {
+    const a = r.range(0, Math.PI * 2);
+    const d = Math.sqrt(r.next());
+    const p: Pt = [at[0] + Math.cos(a) * radius * d, at[1] + Math.sin(a) * radius * 0.76 * d];
+    if (florets.every((q) => Math.hypot(q[0] - p[0], q[1] - p[1]) > radius * 0.15)) florets.push(p);
+  }
+  florets.sort((a, b) => a[1] - b[1]);
+  for (const f of florets) {
+    // florets near the rim are seen edge-on, so they squash
+    const rim = Math.hypot((f[0] - at[0]) / radius, (f[1] - at[1]) / (radius * 0.78));
+    const size = radius * r.range(0.15, 0.19);
+    const frame = chain(translate(f[0], f[1]), rotate(r.range(0, 90)), scale(1, lerp(0.95, 0.6, rim)));
+    for (let k = 0; k < 4; k++) {
+      out.push(...petal(chain(frame, rotate(k * 90 + r.jitter(8))), { len: size, spread: 0.62, k: 0.3, ruffle: 0.02, freq: 4, hatch: 2 }, r, r.range(0.55, 0.95)));
+    }
+    out.push({ d: dot(f, size * 0.12), w: OUT * 0.8, o: 0.9 });
+  }
+  return out;
+}
+
+/** A tulip seen from the side: three petals behind, two in front, each with a soft point. Base at `at`. */
+export function tulip(at: Pt, size: number, angle: number, r: Rng): Stroke[] {
+  const out: Stroke[] = [];
+  const shape = (w: number, h: number): Pt[] => {
+    const pts: Pt[] = [];
+    for (let i = 0; i <= 10; i++) {
+      const t = i / 10;
+      pts.push([-w * Math.sin(Math.PI * Math.pow(t, 0.7)) * (1 - 0.35 * t), -h * t]);
+    }
+    for (let i = 9; i > 0; i--) {
+      const t = i / 10;
+      pts.push([w * Math.sin(Math.PI * Math.pow(t, 0.7)) * (1 - 0.35 * t), -h * t]);
+    }
+    return pts;
+  };
+  const petals: { x: number; rot: number; w: number; h: number; tone: number }[] = [
+    { x: -size * 0.2, rot: -14, w: size * 0.3, h: size * 0.98, tone: 0.5 },
+    { x: size * 0.2, rot: 14, w: size * 0.3, h: size * 0.98, tone: 0.5 },
+    { x: 0, rot: 0, w: size * 0.3, h: size * 1.02, tone: 0.55 },
+    { x: -size * 0.1, rot: -5, w: size * 0.33, h: size * 0.9, tone: 0.8 },
+    { x: size * 0.12, rot: 7, w: size * 0.31, h: size * 0.88, tone: 0.9 },
+  ];
+  for (const p of petals) {
+    const m = chain(translate(at[0], at[1]), rotate(angle), translate(p.x, 0), rotate(p.rot));
+    out.push({ d: smooth(applyAll(m, shape(p.w, p.h)), true), w: OUT, o: 0.95, fill: true, tone: p.tone });
+    for (let k = 0; k < 6; k++) {
+      const x = r.range(-0.6, 0.7) * p.w;
+      const y0 = -p.h * r.range(0.05, 0.2);
+      out.push({ d: smooth(applyAll(m, [[x * 0.5, y0], [x, y0 - p.h * 0.3], [x * 0.8, y0 - p.h * r.range(0.4, 0.6)]])), w: HATCH, o: 0.55 });
+    }
+  }
+  return out;
+}

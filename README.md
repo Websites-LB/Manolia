@@ -2,11 +2,13 @@
 
 Website for Manolia, a floral boutique in Jbeil (Byblos), Lebanon: floral design, weddings and events.
 
-- **Home**, told in chapters: an engraved, hand-coloured bouquet that draws itself stem by stem in front of the
-  name set enormous (hero) · a manifesto that brightens word by word as you scroll · signature bouquets in a
-  pinned sideways gallery · weddings, where a framed photo grows to fill the screen · the week's stems drifting
-  past · how to order · visit.
-- **Shop**: bouquets, boxes and vase arrangements with photographs; the bag sends the order to Manolia on WhatsApp.
+- **Home**: an engraved, hand-coloured bouquet draws itself stem by stem in front of the name (hero). Below it the
+  page becomes one long illustrated plate: a root grows down as you scroll, and every flower we work with —
+  peony, garden rose, anemone, ranunculus, hydrangea, tulip — sprouts from it with its Latin name, season,
+  meaning, colours and the bouquets it is in. Weddings & events (gypsophila), how to order (eucalyptus) and the
+  visit grow off the same root. Engraved butterflies drift over everything and shy away from the cursor.
+- **Shop**: every bouquet, box and vase is drawn as an engraved plate in its own colours (no stock photos);
+  the bag sends the order to Manolia on WhatsApp.
 
 ## Stack
 
@@ -20,12 +22,14 @@ The hero illustration is generated, not a picture: seeded code draws peony, rose
 leaves, eucalyptus, gypsophila and a silk tie the way a copper-plate botanical is drawn — fine outlines,
 hatching from the base of each petal, and fills of the ground colour (tinted like a hand-coloured print) so
 nearer petals hide the lines behind them. On load the paths are inked in the order a florist builds a bouquet.
+The same parts make the single specimens along the root (`specimen.ts`), the shop plates (posy, hat box,
+vase) and the root system itself (`roots.ts`), which is threaded through each flower's stem base after layout.
 
 See `CLAUDE.md` for how we work.
 
 ## Credits
 
-- Shop photos: [Unsplash](https://unsplash.com) (free licence), stand-ins until Manolia's own photos
+- All illustration is generated in code (`src/lib/botanic`); no third-party images
 
 ## Develop
 

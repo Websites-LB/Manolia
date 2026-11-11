@@ -58,7 +58,7 @@ export function CartSheet() {
                 {items.map((i) => (
                   <li key={i.id} className="flex gap-4 py-5">
                     <div className="h-24 w-20 shrink-0 overflow-hidden rounded-[3px] bg-paper-2">
-                      <ProductImage product={i.product} />
+                      <ProductImage product={i.product} mode="static" />
                     </div>
                     <div className="flex flex-1 flex-col">
                       <div className="flex justify-between gap-2">

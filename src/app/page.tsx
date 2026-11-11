@@ -1,22 +1,17 @@
+import { Butterflies } from "@/components/art/butterflies";
+import { Garden } from "@/components/garden/garden";
 import { Hero } from "@/components/hero/hero";
-import { Manifesto } from "@/components/home/manifesto";
-import { Ordering } from "@/components/home/ordering";
-import { Signatures } from "@/components/home/signatures";
-import { Stems } from "@/components/home/stems";
-import { Visit } from "@/components/home/visit";
-import { Weddings } from "@/components/home/weddings";
 
-/** The home page reads as one argument in chapters: who we are, what we make, how to get it, where to find us. */
+/**
+ * One illustrated plate from top to bottom: the bouquet, then its roots running down the page,
+ * with every flower, the weddings, the ordering and the door of the boutique growing off them.
+ */
 export default function Home() {
   return (
     <>
       <Hero />
-      <Manifesto />
-      <Signatures />
-      <Weddings />
-      <Stems />
-      <Ordering />
-      <Visit />
+      <Garden />
+      <Butterflies />
     </>
   );
 }
