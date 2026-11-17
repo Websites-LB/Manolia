@@ -62,76 +62,95 @@ export function RequestRoom({ initial }: { initial: PublicRequest }) {
   const occasion = occasionLabel(r.brief.occasion);
   const palette = r.brief.palette === "surprise" ? "Florist's choice" : PALETTES.find((p) => p.id === r.brief.palette)?.name;
 
+  const [head, ...rest] = STATE[r.status][0].split(" ").reverse();
+  const tint = r.brief.palette === "surprise" ? null : PALETTES.find((p) => p.id === r.brief.palette)?.tints;
+
   return (
-    <div className="night-glow text-line">
-      <div className="gutter grid grid-cols-[minmax(0,1fr)] gap-x-[5vw] gap-y-10 pb-20 pt-28 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:pt-40">
+    <div className="relative overflow-x-clip text-line" style={{ background: "linear-gradient(#13241a, #0f1b13 30%, #0b140f)" }}>
+      <div className="pointer-events-none absolute -left-[15%] top-[-8%] h-[70vh] w-[70vw] blur-3xl" style={{ background: "radial-gradient(closest-side, rgb(240 185 174 / 0.12), transparent)" }} />
+      <div className="gutter relative grid grid-cols-[minmax(0,1fr)] gap-x-[5vw] gap-y-10 pb-24 pt-28 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:pt-40">
         <aside className="md:sticky md:top-28 md:self-start">
-          <p className="label text-line/50">Request {r.ref}</p>
-          <h1 className="display mt-4 text-[clamp(48px,6vw,104px)] text-paper">
-            {STATE[r.status][0].split(" ").slice(0, -1).join(" ")} <em>{STATE[r.status][0].split(" ").slice(-1)}</em>
+          <p className="text-[16px] italic text-line/55">Request {r.ref}</p>
+          <h1 className="display mt-3 text-[clamp(56px,6.6vw,112px)] text-paper">
+            {rest.reverse().join(" ")} <em>{head}</em>
           </h1>
-          <p className="mt-5 max-w-[40ch] text-[15px] leading-relaxed text-line/65">{STATE[r.status][1]}</p>
+          <p className="mt-5 max-w-[34ch] text-[19px] italic leading-snug text-line/65">{STATE[r.status][1]}</p>
 
           {r.status === "accepted" && r.accepted && (
-            <button onClick={() => (toBag(r), router.push("/checkout"))} className="pill mt-7 bg-blush text-night hover:bg-paper">
+            <button onClick={() => (toBag(r), router.push("/checkout"))} className="mt-7 flex items-center gap-2 rounded-full bg-blush px-7 py-4 text-[18px] text-night transition-colors duration-500 hover:bg-paper">
               Pay {money(r.accepted.price)} at the checkout <span aria-hidden>→</span>
             </button>
           )}
           {r.status === "ordered" && r.orderId && (
-            <Link href={`/order/${r.orderId}`} className="pill mt-7 bg-paper text-night hover:bg-blush">
+            <Link href={`/order/${r.orderId}`} className="mt-7 inline-flex items-center gap-2 rounded-full bg-paper px-7 py-4 text-[18px] text-night transition-colors duration-500 hover:bg-blush">
               Follow your order <span aria-hidden>→</span>
             </Link>
           )}
 
-          <div className="mt-10 flex gap-5 rounded-[10px] border border-line/12 p-5">
-            <div className="hidden aspect-[4/5] w-24 shrink-0 overflow-hidden rounded-[6px] sm:block">
-              <ProductImage brief={r.brief} mode="static" frame={false} />
+          {/* what they asked for, as the note they wrote */}
+          <div className="mt-10 max-w-[440px] -rotate-1 rounded-[10px] bg-paper p-5 text-ink shadow-[0_40px_80px_-40px_rgb(0_0_0/0.9)] md:p-6">
+            <div className="flex gap-4">
+              <div className="aspect-[4/5] w-20 shrink-0 overflow-hidden rounded-[10px]">
+                <ProductImage brief={r.brief} mode="static" frame={false} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[14px] italic text-ink/45">Your note</p>
+                <p className="display text-[28px] leading-tight">{occasion}</p>
+                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] text-ink/65">
+                  <span className="flex items-center gap-1.5">
+                    {tint && <span className="h-3.5 w-3.5 rounded-full ring-1 ring-ink/10" style={{ background: `linear-gradient(135deg, ${tint[0]} 50%, ${tint[1]} 50%)` }} />}
+                    {palette}
+                  </span>
+                  <span>About {money(r.brief.budget)}</span>
+                  {r.neededBy && <span>{prettyDate(r.neededBy)}</span>}
+                </p>
+              </div>
             </div>
-            <dl className="min-w-0 flex-1 space-y-2.5 text-[13.5px]">
-              {[
-                ["Occasion", occasion],
-                ["Colours", palette],
-                ["Budget", `About ${money(r.brief.budget)}`],
-                ...(r.neededBy ? [["For", prettyDate(r.neededBy)]] : []),
-              ].map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-4">
-                  <dt className="label pt-0.5 text-line/40">{k}</dt>
-                  <dd className="text-right text-line/85">{v}</dd>
-                </div>
-              ))}
-              {r.brief.about && <dd className="border-t border-line/10 pt-3 font-serif text-[18px] italic leading-snug text-paper">“{r.brief.about}”</dd>}
-            </dl>
+            {r.brief.about && <p className="mt-4 border-t border-ink/10 pt-3 text-[19px] italic leading-snug">“{r.brief.about}”</p>}
           </div>
 
           {live && (
             <button
               onClick={() => navigator.clipboard?.writeText(window.location.href).then(() => (setCopied(true), setTimeout(() => setCopied(false), 2400)))}
-              className="label mt-5 flex items-center gap-2 text-line/50 transition-colors duration-500 hover:text-paper"
+              className="mt-7 flex items-center gap-2 text-[16px] italic text-line/55 transition-colors duration-500 hover:text-paper"
             >
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
-              {copied ? "Link copied" : "Copy the link to come back to this conversation"}
+              {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+              {copied ? "Link copied" : "Copy the link to come back here"}
             </button>
           )}
         </aside>
 
-        <section className="flex h-[min(74svh,760px)] flex-col rounded-[14px] border border-line/12 bg-[#0e1a13]/80 p-4 backdrop-blur md:p-6" aria-label={`Conversation about ${briefSummary(r.brief)}`}>
-          <header className="flex items-center gap-3 border-b border-line/12 pb-4">
-            <span className="display flex h-11 w-11 items-center justify-center rounded-full bg-blush text-[26px] text-night">M</span>
-            <div>
-              <p className="text-[15px] text-paper">Manolia, the florist</p>
-              <p className="label mt-0.5 text-line/45">Jbeil · replies here</p>
+        {/* the conversation, on paper like every chat on the site */}
+        <section className="flex h-[min(78svh,780px)] flex-col overflow-hidden rounded-[28px] bg-paper text-ink shadow-[0_80px_140px_-60px_rgb(0_0_0/0.9)]" aria-label={`Conversation about ${briefSummary(r.brief)}`}>
+          <header className="flex items-center gap-3 border-b border-ink/10 px-5 py-4">
+            <span className="display flex h-11 w-11 items-center justify-center rounded-full bg-night text-[22px] text-paper">M</span>
+            <div className="flex-1">
+              <p className="display text-[22px] leading-none">Manolia</p>
+              <p className="mt-1 text-[14px] italic leading-none text-ink/50">Your florist in Jbeil</p>
             </div>
+            {live && (
+              <span className="flex items-center gap-2 text-[14px] italic text-ink/45">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inset-0 animate-ping rounded-full bg-clay/60" />
+                  <span className="relative h-2 w-2 rounded-full bg-clay" />
+                </span>
+                Live
+              </span>
+            )}
           </header>
-          <Thread
-            messages={r.messages}
-            me="customer"
-            acceptedId={r.accepted?.msgId}
-            closed={!live}
-            onSend={(m) => call("messages", m).then(() => undefined)}
-            onAccept={accept}
-            placeholder="Write to the florist…"
-            empty={`Thank you, ${r.firstName}. Your note is with the florist. Anything to add? A colour to avoid, a favourite flower, a photo of the place it is going?`}
-          />
+          <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 md:px-5">
+            <Thread
+              tone="paper"
+              messages={r.messages}
+              me="customer"
+              acceptedId={r.accepted?.msgId}
+              closed={!live}
+              onSend={(m) => call("messages", m).then(() => undefined)}
+              onAccept={accept}
+              placeholder="Write to the florist…"
+              empty={`Thank you, ${r.firstName}. Your note is with the florist. Anything to add? A colour to avoid, a favourite flower, a photo of the place it's going?`}
+            />
+          </div>
         </section>
       </div>
     </div>
