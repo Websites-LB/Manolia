@@ -5,7 +5,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 
-import { FadeUp } from "@/components/motion/fade-up";
 import { Magnetic } from "@/components/motion/magnetic";
 import { ProductImage } from "@/components/shop/product-image";
 import { EMPTY_STEMS, type Recipe } from "@/lib/custom";
@@ -56,31 +55,14 @@ export function AskStory() {
 
   return (
     <section className="relative text-line">
-      <ChapterHead id="ask" bloom="#c9b5e6" kicker="No idea what to get?" title={"Tell us about them.\n*We'll choose.*"} />
+      <ChapterHead id="ask" bloom="#c9b5e6" title={"No idea?\n*Tell us about them.*"} />
       <div className="gutter relative z-10 mt-12 grid items-center gap-12 md:mt-16 md:grid-cols-[0.9fr_1.1fr] md:gap-[6vw] md:pl-[8vw]">
         <div>
-          <p className="max-w-[40ch] text-[17px] leading-relaxed text-line/70">
-            Write a few words about the person and the occasion. Our florist answers with a photo and a price, and you only pay once you love it.
-          </p>
-          <FadeUp className="mt-10 space-y-6" stagger={0.1}>
-            {[
-              ["Describe them", "Who they are, what they like, the occasion, your budget."],
-              ["We send a proposal", "A photo of what we would make, and the price."],
-              ["Say yes and pay", "Or ask for a change. Nothing is paid before you agree."],
-            ].map(([t, d], i) => (
-              <div key={t} className="flex items-baseline gap-4">
-                <span className="display text-[40px] leading-none text-blush">{i + 1}</span>
-                <div>
-                  <p className="display text-[30px] text-paper">{t}</p>
-                  <p className="mt-1 text-[15px] leading-snug text-line/60">{d}</p>
-                </div>
-              </div>
-            ))}
-          </FadeUp>
+          <p className="max-w-[30ch] text-[20px] italic leading-snug text-line/75">A few words about them. We send a photo and a price. You pay only if you love it.</p>
           <div className="mt-10">
             <Magnetic>
               <Link href="/shop#florist" data-cursor="Write" className="pill bg-paper text-night hover:bg-blush">
-                Write to the florist <span aria-hidden>→</span>
+                Write to us <span aria-hidden>→</span>
               </Link>
             </Magnetic>
           </div>

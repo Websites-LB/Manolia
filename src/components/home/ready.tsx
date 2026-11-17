@@ -23,15 +23,16 @@ function Card({ p }: { p: Product }) {
         </div>
         <span className="display absolute right-4 top-4 rounded-full bg-night/70 px-4 py-1.5 text-[24px] text-blush backdrop-blur-md">{usd(p.price)}</span>
       </div>
-      <h3 className="display mt-5 text-[38px] text-paper md:text-[46px]">{p.name}</h3>
-      <p className="mt-2 line-clamp-2 min-h-[2.8em] text-[15px] leading-snug text-line/60">{p.blurb}</p>
-      <button
-        onClick={() => add(p.id)}
-        className="pill mt-5 w-full justify-center bg-paper text-night hover:bg-blush"
-        aria-label={`Add ${p.name} to bag, ${usd(p.price)}`}
-      >
-        Add to bag · {usd(p.price)}
-      </button>
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <h3 className="display text-[36px] text-paper md:text-[44px]">{p.name}</h3>
+        <button
+          onClick={() => add(p.id)}
+          className="flex h-12 shrink-0 items-center gap-2 rounded-full bg-paper pl-5 pr-4 text-[15px] text-night transition-colors duration-500 hover:bg-blush"
+          aria-label={`Add ${p.name} to bag, ${usd(p.price)}`}
+        >
+          Add <span className="text-[20px] leading-none">+</span>
+        </button>
+      </div>
     </article>
   );
 }
@@ -69,9 +70,7 @@ export function Ready() {
 
   return (
     <section className="relative text-line">
-      <ChapterHead id="ready" bloom="#e3909a" kicker="Ready to send" title={"Get them something\n*special.*"}>
-        <p className="mt-7 max-w-[44ch] text-[17px] leading-relaxed text-line/65">Bouquets, boxes and vases our florist designs every week. Tap one, pay by Whish or card, and we deliver it the same day.</p>
-      </ChapterHead>
+      <ChapterHead id="ready" bloom="#e3909a" title={"Get them something\n*special.*"} />
 
       <div ref={stage} className="relative mt-12 md:mt-0">
         <div className="relative z-10 md:sticky md:top-0 md:flex md:h-[100svh] md:flex-col md:justify-center md:overflow-hidden">
@@ -87,14 +86,12 @@ export function Ready() {
               data-cursor="Shop"
               className="ready-card group flex w-[60vw] shrink-0 snap-start flex-col justify-center rounded-[12px] border border-line/15 p-8 transition-colors duration-700 hover:border-blush sm:w-[40vw] md:w-[clamp(260px,20vw,340px)]"
             >
-              <p className="label text-line/50">{PRODUCTS.length} pieces and more</p>
-              <p className="display mt-4 text-[52px] text-paper md:text-[64px]">
+              <p className="display text-[52px] text-paper md:text-[64px]">
                 See the whole <em>shop</em>
               </p>
               <span className="display mt-6 text-[48px] text-blush transition-transform duration-700 ease-[cubic-bezier(.16,1,.3,1)] group-hover:translate-x-3">→</span>
             </Link>
           </div>
-          <p className="label gutter mt-2 text-line/40 md:hidden">Swipe to see more →</p>
           <div className="gutter mt-10 hidden md:block md:pl-[8vw] md:pr-[8vw]">
             <div className="h-px w-full bg-line/12">
               <div ref={bar} className="h-px origin-left bg-blush" />

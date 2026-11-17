@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "manolia", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 3000 }
+    { "name": "manolia", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 3000 },
+    { "name": "manolia-prod", "runtimeExecutable": "npm", "runtimeArgs": ["run", "start", "--", "-p", "3001"], "port": 3001 }
   ]
 }

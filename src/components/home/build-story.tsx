@@ -15,20 +15,20 @@ import { ChapterHead, Lane } from "./parts";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const STEPS: { title: string; line: string; recipe: Recipe }[] = [
+const STEPS: { title: string; word: string; recipe: Recipe }[] = [
   {
-    title: "Pick your flowers",
-    line: "Peonies, garden roses, tulips, ranunculus… choose how many of each.",
+    title: "Pick the flowers",
+    word: "Flowers",
     recipe: { stems: { ...EMPTY_STEMS, peony: 3, rose: 5 }, palette: "blush", greens: [], wrap: "ivory" },
   },
   {
-    title: "Choose the colours",
-    line: "Blush, ivory, sunset, lavender, deep red. The bouquet changes as you tap.",
+    title: "Then the colours",
+    word: "Colours",
     recipe: { stems: { ...EMPTY_STEMS, peony: 3, rose: 5 }, palette: "sunset", greens: [], wrap: "ivory" },
   },
   {
-    title: "Add greenery and the wrap",
-    line: "Eucalyptus, baby's breath, paper, a hat box or a glass vase. The price follows every choice.",
+    title: "And the wrap",
+    word: "Wrap",
     recipe: { stems: { ...EMPTY_STEMS, peony: 3, rose: 5 }, palette: "sunset", greens: ["eucalyptus", "gypsophila"], wrap: "kraft" },
   },
 ];
@@ -56,7 +56,7 @@ export function BuildStory() {
   const s = STEPS[step];
   return (
     <section className="relative text-line">
-      <ChapterHead id="build" bloom="#f5c78f" kicker="Made just for them" title={"Want it personal?\n*Build your own.*"} />
+      <ChapterHead id="build" bloom="#f5c78f" title={"Or make it\n*your own.*"} />
       <div ref={stage} className="relative h-[300svh]">
         <div className="sticky top-0 z-10 grid h-[100svh] grid-rows-[minmax(0,1fr)_auto] items-center gap-4 py-20 md:grid-cols-2 md:grid-rows-1 md:gap-[5vw] md:py-0">
           {/* the bouquet, repainted at every step */}
@@ -64,7 +64,7 @@ export function BuildStory() {
             <div className="relative aspect-[4/5] max-h-full w-[min(70vw,340px)] overflow-hidden md:h-full md:max-h-[min(72svh,620px)] md:w-auto rounded-[14px] shadow-[0_60px_120px_-50px_rgb(0_0_0/0.8)]">
               <ProductImage key={step} recipe={s.recipe} mode="load" />
               <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-full bg-night/65 px-5 py-2.5 backdrop-blur-md">
-                <span className="label text-line/70">Your bouquet</span>
+                <span className="text-[15px] italic text-line/75">{s.title}</span>
                 <span className="display text-[26px] tabular-nums text-blush">
                   <NumberFlow value={recipePrice(s.recipe)} format={{ style: "currency", currency: "USD", maximumFractionDigits: 0 }} />
                 </span>
@@ -74,16 +74,10 @@ export function BuildStory() {
 
           {/* the three choices */}
           <div className="gutter relative z-10 min-w-0 md:pl-[8vw]">
-            <ol className="space-y-1 md:space-y-3">
+            <ol className="flex gap-6 md:block md:space-y-0">
               {STEPS.map((x, i) => (
-                <li key={x.title} className={cn("transition-opacity duration-700 ease-[cubic-bezier(.16,1,.3,1)]", i === step ? "opacity-100" : "opacity-30", i !== step && "hidden md:block")}>
-                  <div className="flex items-baseline gap-4">
-                    <span className="display text-[34px] text-blush md:text-[44px]">{i + 1}</span>
-                    <p className="display text-[34px] text-paper md:text-[52px]">{x.title}</p>
-                  </div>
-                  <div className={cn("grid transition-[grid-template-rows] duration-700 ease-[cubic-bezier(.16,1,.3,1)]", i === step ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
-                    <p className="overflow-hidden pl-[calc(34px+1rem)] text-[16px] leading-relaxed text-line/65 md:pl-[calc(44px+1rem)] md:text-[17px]">{x.line}</p>
-                  </div>
+                <li key={x.title} className={cn("display text-[44px] leading-[1] transition-all duration-700 ease-[cubic-bezier(.16,1,.3,1)] md:text-[clamp(72px,8vw,140px)]", i === step ? "text-paper" : "text-line/20", i === step && "italic md:translate-x-[1.5vw]")}>
+                  {x.word}
                 </li>
               ))}
             </ol>
@@ -95,7 +89,7 @@ export function BuildStory() {
             <div className="mt-8 md:mt-12">
               <Magnetic>
                 <Link href="/shop/build" data-cursor="Build" className="pill bg-blush text-night hover:bg-paper">
-                  Start building yours <span aria-hidden>→</span>
+                  Start yours <span aria-hidden>→</span>
                 </Link>
               </Magnetic>
             </div>

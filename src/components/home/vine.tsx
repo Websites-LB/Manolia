@@ -144,8 +144,8 @@ function Art({ v, w, h }: { v: VineShape; w: number; h: number }) {
 
 /**
  * Wraps the home page and grows a vine through it. Any `[data-vine]` marker inside is a point the
- * stem passes through (in page order); `data-bloom="#hex"` opens a flower there. The first marker is
- * the hero bouquet's cut stems.
+ * stem passes through (in page order); `data-bloom="#hex"` opens a flower there. It starts below the
+ * hero, at the edge of the page, so it never crosses the name.
  */
 export function Vine({ children }: { children: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);

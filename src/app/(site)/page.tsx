@@ -21,19 +21,19 @@ export default function Home() {
         <div className="relative overflow-clip" style={{ background: "linear-gradient(#13241a, #101d15 30%, #0d1711 70%, #0b140f)" }}>
           <div className="pointer-events-none absolute right-[-20%] top-[30%] h-[60vh] w-[70vw] blur-3xl" style={{ background: "radial-gradient(closest-side, rgb(240 185 174 / 0.07), transparent)" }} />
           <Chooser />
-          <Sweep x="58%" className="h-[clamp(160px,26vh,300px)]" />
+          <Sweep className="h-[clamp(160px,26vh,300px)]" />
           <Ready />
-          <Sweep x="72%" />
+          <Sweep />
           <BuildStory />
-          <Sweep x="40%" />
+          <Sweep />
           <AskStory />
-          <Sweep x="66%" />
+          <Sweep />
           <HowItWorks />
-          <Sweep x="50%" />
+          <Sweep />
           <Visit />
         </div>
       </Vine>
-      <Butterflies />
+      <Butterflies count={3} />
     </>
   );
 }

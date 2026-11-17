@@ -3,26 +3,22 @@ import type { ReactNode } from "react";
 import { SplitWords } from "@/components/motion/split-words";
 import { cn } from "@/lib/utils";
 
-/**
- * The opening of a chapter: a flower opens on the vine beside it, a short line in blush says what
- * this part is for, then the question it answers, set huge.
- */
-export function ChapterHead({ id, bloom, kicker, title, children, className }: { id?: string; bloom: string; kicker: string; title: string; children?: ReactNode; className?: string }) {
+/** The opening of a chapter: a flower opens on the vine beside it, and the question, set huge. */
+export function ChapterHead({ id, bloom, title, children, className }: { id?: string; bloom: string; title: string; children?: ReactNode; className?: string }) {
   return (
     <header id={id} className={cn("gutter relative z-10 scroll-mt-20 pr-9 md:pl-[8vw]", className)}>
-      <span data-vine data-bloom={bloom} className="absolute right-[14px] top-[6px] h-px w-px md:left-[3.6vw] md:right-auto md:top-[8px]" />
-      <p className="label text-blush">{kicker}</p>
-      <SplitWords text={title} className="display mt-5 text-[clamp(54px,8.6vw,156px)] text-paper" />
+      <span data-vine data-bloom={bloom} className="absolute right-[14px] top-[0.35em] h-px w-px md:left-[3.6vw] md:right-auto" />
+      <SplitWords text={title} className="display text-[clamp(56px,9.4vw,172px)] text-paper" />
       {children}
     </header>
   );
 }
 
-/** Empty air between two chapters, where the vine swings across the page. */
-export function Sweep({ x, className }: { x: string; className?: string }) {
+/** Air between two chapters, where the vine leans a little out of its lane. */
+export function Sweep({ className }: { className?: string }) {
   return (
     <div className={cn("relative h-[clamp(140px,24vh,260px)]", className)} aria-hidden>
-      <span data-vine className="absolute top-1/2 h-px w-px" style={{ left: x }} />
+      <span data-vine className="absolute right-[26px] top-1/2 h-px w-px md:left-[6.5vw] md:right-auto" />
     </div>
   );
 }

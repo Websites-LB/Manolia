@@ -1,10 +1,10 @@
 /**
  * The vine that runs down the home page. A green stem leaves the hero bouquet's cut stems and climbs
- * down through every chapter: it sweeps across the empty space between them, unfurls a leaf every
- * hand-span, curls the odd tendril, and opens a flower at the start of each chapter.
+ * down through every chapter along the edge of the page, leaning out a little between them, unfurls a leaf every
+ * hand-span, and opens a flower at the start of each chapter.
  * Everything is in page pixels; the component grows it with your scroll.
  */
-import { lerp, rng, smooth, type Pt } from "./geometry";
+import { lerp, rng, type Pt } from "./geometry";
 
 export type Way = { at: Pt; /** a flower opens here, in this colour */ bloom?: string };
 
@@ -45,8 +45,8 @@ export function buildVine(way: Way[], width: number, narrow: boolean, seed = 5):
     const a = way[i].at;
     const b = way[i + 1].at;
     const span = Math.max(1, b[1] - a[1]);
-    const n = Math.max(2, Math.round(span / (narrow ? 90 : 130)));
-    const amp = (narrow ? Math.min(8, span * 0.05) : Math.min(width * 0.025, 34, span * 0.08)) * (i % 2 ? 1 : -1);
+    const n = Math.max(2, Math.round(span / (narrow ? 140 : 220)));
+    const amp = (narrow ? Math.min(6, span * 0.03) : Math.min(width * 0.012, 18, span * 0.05)) * (i % 2 ? 1 : -1);
     for (let k = 0; k < n; k++) {
       const t = k / n;
       const e = t * t * (3 - 2 * t);
@@ -62,8 +62,8 @@ export function buildVine(way: Way[], width: number, narrow: boolean, seed = 5):
   const total = len[len.length - 1];
 
   // the stem, cut into short pieces so only the one at the growing tip repaints while you scroll
-  const w0 = narrow ? 3.4 : 5.2;
-  const w1 = narrow ? 1.8 : 2.6;
+  const w0 = narrow ? 2.8 : 4;
+  const w1 = narrow ? 1.4 : 2;
   const segs: VineSeg[] = [];
   const SEG = 28;
   for (let i = 0; i < pts.length - 1; i += SEG) {
@@ -74,14 +74,14 @@ export function buildVine(way: Way[], width: number, narrow: boolean, seed = 5):
     segs.push({ d: line(piece), lit: line(lit), w, y0: piece[0][1], y1: piece[piece.length - 1][1] });
   }
 
-  const blooms: VineBloom[] = way.filter((w) => w.bloom).map((w, i) => ({ x: w.at[0], y: w.at[1], r: (narrow ? 11 : 17) * (i === 0 ? 1.15 : 1), tint: w.bloom! }));
+  const blooms: VineBloom[] = way.filter((w) => w.bloom).map((w) => ({ x: w.at[0], y: w.at[1], r: narrow ? 10 : 14, tint: w.bloom! }));
   const nearBloom = (p: Pt) => blooms.some((b) => Math.hypot(b.x - p[0], b.y - p[1]) < b.r * 3);
 
   const leaves: VineLeaf[] = [];
+  // tendrils read as decoration rather than plant, so the vine grows none
   const curls: VineCurl[] = [];
-  const gap = narrow ? 64 : 92;
+  const gap = narrow ? 84 : 128;
   let side = 1;
-  let n = 0;
   for (let s = gap * 0.8; s < total - 30; s += gap * r.range(0.75, 1.2)) {
     let i = len.findIndex((l) => l >= s);
     if (i < 1) continue;
@@ -92,23 +92,7 @@ export function buildVine(way: Way[], width: number, narrow: boolean, seed = 5):
     const o = pts[i - 1];
     const tangent = (Math.atan2(q[1] - o[1], q[0] - o[0]) * 180) / Math.PI;
     const big = 1 - (s / total) * 0.35;
-    leaves.push({ x: p[0], y: p[1], angle: tangent + side * r.range(48, 72), size: (narrow ? r.range(10, 15) : r.range(17, 27)) * big, tone: r.next() });
-    // every few leaves a tendril curls off the other side
-    if (++n % 4 === 0 && !narrow) {
-      const curl: Pt[] = [];
-      const dir = -side;
-      let a = ((tangent + dir * 70) * Math.PI) / 180;
-      let rad = r.range(16, 24);
-      let c = p;
-      for (let k = 0; k < 16; k++) {
-        c = [c[0] + Math.cos(a) * rad * 0.42, c[1] + Math.sin(a) * rad * 0.42];
-        curl.push(c);
-        a += dir * 0.52;
-        rad *= 0.86;
-      }
-      const ys = curl.map((v) => v[1]);
-      curls.push({ d: smooth([p, ...curl]), y0: Math.min(p[1], ...ys), y1: Math.max(...ys) + 20 });
-    }
+    leaves.push({ x: p[0], y: p[1], angle: tangent + side * r.range(38, 58), size: (narrow ? r.range(12, 17) : r.range(22, 32)) * big, tone: r.next() });
     side = -side;
   }
 
