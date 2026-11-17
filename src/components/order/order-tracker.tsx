@@ -1,10 +1,13 @@
 "use client";
 
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { ProductImage } from "@/components/shop/product-image";
 import { useCart } from "@/lib/cart-store";
 import { money, PAY_LABEL, prettyDate, TRACK, type PayMethod, type PayMode, type PublicOrder } from "@/lib/orders";
+import { PRODUCTS } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 const LIVE = new Set(["awaiting_payment", "new", "arranging", "out"]);
@@ -18,6 +21,12 @@ export function OrderTracker({ initial, modes }: { initial: PublicOrder; modes: 
   const [busy, setBusy] = useState<PayMethod | null>(null);
   const [error, setError] = useState("");
   const clear = useCart((s) => s.clear);
+  // the progress line draws itself once the page has arrived
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setShown(true), 400);
+    return () => clearTimeout(t);
+  }, []);
   const paid = o.payment.status === "paid";
 
   // the bag is only emptied once the money has actually arrived
@@ -61,63 +70,92 @@ export function OrderTracker({ initial, modes }: { initial: PublicOrder; modes: 
       ? ["The payment", "did not go through."]
       : ["Waiting for", "your payment."];
 
+  const steps = TRACK.map((s) => ({ ...s, title: (pickup && s.pickup) || s.title }));
+  const reached = o.status === "done" ? steps.length - 1 : Math.max(0, at);
+  const current = steps[reached];
+  const live = paid && LIVE.has(o.status);
+
   return (
-    <div className="night-glow text-line">
-      <div className="gutter grid grid-cols-[minmax(0,1fr)] gap-x-[6vw] gap-y-14 pb-28 pt-32 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] md:pt-44">
+    <div className="relative overflow-x-clip text-line" style={{ background: "linear-gradient(#13241a, #0f1b13 30%, #0b140f)" }}>
+      <div className="pointer-events-none absolute -left-[15%] top-[-8%] h-[70vh] w-[70vw] blur-3xl" style={{ background: "radial-gradient(closest-side, rgb(240 185 174 / 0.12), transparent)" }} />
+      <div className="gutter relative grid grid-cols-[minmax(0,1fr)] gap-x-[5vw] gap-y-12 pb-28 pt-28 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] md:pt-40">
         <div>
-          <p className="label text-line/50">
-            Order {o.ref}
-            {o.payment.mode === "test" && <span className="ml-3 text-blush">Test payment</span>}
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[16px] italic text-line/55">
+            <span>Order {o.ref}</span>
+            {o.payment.mode === "test" && <span className="text-blush">Test payment</span>}
+            {live && (
+              <span className="flex items-center gap-2 text-line/45">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inset-0 animate-ping rounded-full bg-blush/70" />
+                  <span className="relative h-2 w-2 rounded-full bg-blush" />
+                </span>
+                Updates by itself
+              </span>
+            )}
           </p>
-          <h1 className="display mt-5 text-[clamp(52px,7.6vw,132px)] text-paper">
+          <h1 className="display mt-5 text-[clamp(56px,8vw,140px)] text-paper">
             {headline[0]}
             <br />
             <em>{headline[1]}</em>
           </h1>
 
           {paid && o.status !== "cancelled" && (
-            <ol className="mt-14 max-w-[560px]">
-              {TRACK.map((s, i) => {
-                const done = i < at || o.status === "done";
-                const now = i === at && o.status !== "done";
-                const when = o.history.find((h) => h.status === s.status)?.at;
-                return (
-                  <li key={s.status} className="relative grid grid-cols-[2.4rem_1fr] gap-x-4 pb-9 last:pb-0">
-                    {i < TRACK.length - 1 && <span className={cn("absolute left-[0.72rem] top-7 h-[calc(100%-1.75rem)] w-px transition-colors duration-1000", done ? "bg-blush" : "bg-line/15")} />}
-                    <span className={cn("relative mt-1.5 h-6 w-6 rounded-full border transition-colors duration-1000", done ? "border-blush bg-blush" : now ? "border-blush" : "border-line/25")}>
-                      {now && <span className="absolute inset-1 animate-pulse rounded-full bg-blush" />}
-                    </span>
-                    <div>
-                      <p className={cn("display text-[34px] transition-colors duration-1000 md:text-[40px]", done || now ? "text-paper" : "text-line/35")}>{(pickup && s.pickup) || s.title}</p>
-                      <p className={cn("mt-1 text-[14px]", done || now ? "text-line/60" : "text-line/30")}>
-                        {s.line}
-                        {when && <span className="label ml-3 text-line/40">{new Date(when).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>}
-                      </p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
+            <div className="mt-14 max-w-[640px]">
+              <p className="text-[22px] italic leading-snug text-line/75 md:text-[26px]">
+                <span className="display not-italic text-paper">{current.title}.</span> {current.line}
+              </p>
+
+              {/* the journey: four stops on one line, filled up to where the order is now */}
+              <div className="relative mt-10">
+                <div className="absolute left-3 right-3 top-3 h-[2px] rounded-full bg-line/12" />
+                <div
+                  className="absolute left-3 top-3 h-[2px] origin-left rounded-full bg-blush transition-transform duration-[1800ms] ease-[cubic-bezier(.16,1,.3,1)]"
+                  style={{ width: "calc(100% - 1.5rem)", transform: `scaleX(${shown ? reached / (steps.length - 1) : 0})` }}
+                />
+                <ol className="relative grid grid-cols-4">
+                  {steps.map((s, i) => {
+                    const done = i < reached || o.status === "done";
+                    const now = i === reached && o.status !== "done";
+                    const when = o.history.find((h) => h.status === s.status)?.at;
+                    return (
+                      <li key={s.status} className={cn("flex flex-col", i === 0 ? "items-start" : i === steps.length - 1 ? "items-end text-right" : "items-center text-center")}>
+                        <span
+                          className={cn(
+                            "relative flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors duration-1000",
+                            done ? "border-blush bg-blush" : now ? "border-blush bg-night" : "border-line/20 bg-night",
+                          )}
+                        >
+                          {done && <Check className="h-3.5 w-3.5 text-night" strokeWidth={3} />}
+                          {now && <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-blush" />}
+                        </span>
+                        <p className={cn("display mt-3 text-[18px] leading-tight transition-colors duration-1000 md:text-[24px]", done || now ? "text-paper" : "text-line/35")}>{s.title}</p>
+                        {when && <p className="mt-1 text-[13px] italic text-line/40">{new Date(when).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</p>}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            </div>
           )}
 
-          {paid && o.status === "cancelled" && <p className="mt-8 max-w-[44ch] text-[15px] leading-relaxed text-line/65">The boutique cancelled this order and will be in touch about your refund.</p>}
+          {paid && o.status === "cancelled" && <p className="mt-8 max-w-[40ch] text-[19px] italic leading-snug text-line/65">The boutique cancelled this order and will be in touch about your refund.</p>}
 
           {!paid && (
             <div className="mt-10 max-w-[520px]">
-              <p className="text-[15px] leading-relaxed text-line/65">
-                {o.status === "payment_failed" ? "Nothing was charged, and your order is saved. You can try again with either method." : "If you already paid, this page will catch up in a few seconds. Otherwise you can pay now; your order is saved."}
+              <p className="text-[19px] italic leading-snug text-line/65">
+                {o.status === "payment_failed" ? "Nothing was charged, and your order is saved. You can try again." : "If you already paid, this page catches up in a few seconds. Otherwise you can pay now; your order is saved."}
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 {(Object.keys(PAY_LABEL) as PayMethod[])
                   .filter((m) => modes[m] !== "off")
                   .map((m) => (
-                    <button key={m} onClick={() => payAgain(m)} disabled={!!busy} className="pill bg-paper text-night hover:bg-blush disabled:opacity-60">
+                    <button key={m} onClick={() => payAgain(m)} disabled={!!busy} className="rounded-full bg-paper px-6 py-3.5 text-[17px] text-night transition-colors duration-500 hover:bg-blush disabled:opacity-60">
                       {busy === m ? "One moment…" : `Pay ${money(o.total)} with ${PAY_LABEL[m]}`}
                     </button>
                   ))}
               </div>
               {error && (
-                <p role="alert" className="mt-4 text-[13px] text-blush">
+                <p role="alert" className="mt-4 text-[15px] text-blush">
                   {error}
                 </p>
               )}
@@ -125,37 +163,47 @@ export function OrderTracker({ initial, modes }: { initial: PublicOrder; modes: 
           )}
         </div>
 
-        <aside className="self-start rounded-[8px] border border-line/12 p-6 md:p-8">
-          <p className="label text-line/45">{pickup ? "Pick-up in Jbeil" : `Delivery · ${o.fulfilment.zone}`}</p>
-          <p className="display mt-3 text-[34px] text-paper">{prettyDate(o.fulfilment.date)}</p>
-          <p className="mt-1 text-[14px] text-line/60">{o.fulfilment.slot}</p>
-          <ul className="mt-6 divide-y divide-line/10 border-t border-line/10">
-            {o.lines.map((l) => (
-              <li key={l.id} className="py-4">
-                <div className="flex justify-between gap-3">
-                  <p className="display text-[26px] text-paper">
-                    {l.qty > 1 && <span className="mr-2 text-blush">{l.qty} ×</span>}
-                    {l.name}
-                  </p>
-                  <p className="text-sm tabular-nums text-line/80">{money(l.price * l.qty)}</p>
+        {/* the order itself: the same paper slip as at the checkout */}
+        <aside className="relative self-start md:sticky md:top-28">
+          <div className="rounded-[26px] bg-paper p-6 text-ink shadow-[0_80px_140px_-60px_rgb(0_0_0/0.9)] md:p-8">
+            <p className="text-[16px] italic text-ink/55">{pickup ? "Pick-up at the boutique in Jbeil" : `Delivery to ${o.fulfilment.zone}`}</p>
+            <p className="display mt-1 text-[34px] leading-tight">{prettyDate(o.fulfilment.date)}</p>
+            <p className="text-[16px] text-ink/60">{o.fulfilment.slot}</p>
+            <ul className="mt-5 divide-y divide-ink/10 border-t border-ink/10">
+              {o.lines.map((l) => {
+                const product = PRODUCTS.find((p) => p.id === l.id);
+                return (
+                  <li key={l.id} className="flex items-center gap-4 py-4">
+                    {(product || l.recipe || l.image) && (
+                      <div className="h-20 w-16 shrink-0 overflow-hidden rounded-[12px] bg-night">
+                        <ProductImage product={product} recipe={l.recipe} image={l.image} mode="static" frame={false} />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="display text-[24px] leading-tight">
+                        {l.name} {l.qty > 1 && <span className="text-[18px] text-ink/45">× {l.qty}</span>}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-[13.5px] italic leading-snug text-ink/50">{l.detail}</p>
+                    </div>
+                    <p className="shrink-0 text-[17px] tabular-nums">{money(l.price * l.qty)}</p>
+                  </li>
+                );
+              })}
+            </ul>
+            <dl className="space-y-2 border-t border-ink/10 pt-4 text-[16px]">
+              {o.deliveryFee > 0 && (
+                <div className="flex justify-between text-ink/60">
+                  <dt>Delivery</dt>
+                  <dd className="tabular-nums">{money(o.deliveryFee)}</dd>
                 </div>
-                <p className="mt-1 text-[12.5px] leading-snug text-line/45">{l.detail}</p>
-              </li>
-            ))}
-          </ul>
-          <dl className="space-y-2 border-t border-line/10 pt-5 text-sm">
-            {o.deliveryFee > 0 && (
-              <div className="flex justify-between text-line/60">
-                <dt>Delivery</dt>
-                <dd className="tabular-nums">{money(o.deliveryFee)}</dd>
+              )}
+              <div className="flex items-baseline justify-between pt-1">
+                <dt className="text-[17px] italic text-ink/55">{paid ? `Paid by ${PAY_LABEL[o.payment.method]}` : "Total"}</dt>
+                <dd className="display text-[52px] leading-none tabular-nums">{money(o.total)}</dd>
               </div>
-            )}
-            <div className="flex items-baseline justify-between">
-              <dt className="label text-line/45">{paid ? `Paid by ${PAY_LABEL[o.payment.method]}` : "Total"}</dt>
-              <dd className="display text-[44px] tabular-nums text-paper">{money(o.total)}</dd>
-            </div>
-          </dl>
-          <Link href="/shop" className="label link-u mt-6 inline-block text-line/60">
+            </dl>
+          </div>
+          <Link href="/shop" className="link-u mt-6 inline-block text-[17px] italic text-line/60">
             Back to the shop
           </Link>
         </aside>
