@@ -27,8 +27,8 @@ export const PRODUCTS: Product[] = [
     name: "Jbeil Morning",
     category: "bouquets",
     price: 65,
-    blurb: "Soft pink roses with waxflower and silver eucalyptus, loosely tied and wrapped in ivory paper.",
-    stems: "Roses · waxflower · eucalyptus",
+    blurb: "Peach roses and white carnations with fresh fern, loosely tied and wrapped in paper.",
+    stems: "Roses · carnations · fern",
     art: { flower: "rose", style: "posy", tint: "#f0b9ae", seed: 3 },
   },
   {
@@ -45,8 +45,8 @@ export const PRODUCTS: Product[] = [
     name: "First Dance",
     category: "bouquets",
     price: 120,
-    blurb: "Our bridal signature: ivory garden roses, white blooms and trailing greenery, finished with silk ribbon.",
-    stems: "Bridal · garden roses · greenery",
+    blurb: "Our bridal signature: ivory and dusty-pink garden roses with soft astilbe and silver leaves.",
+    stems: "Bridal · garden roses · astilbe",
     art: { flower: "rose", style: "posy", tint: "#f3eadb", seed: 8 },
   },
   {
@@ -54,8 +54,8 @@ export const PRODUCTS: Product[] = [
     name: "Lavender Hour",
     category: "bouquets",
     price: 90,
-    blurb: "A dense dome of lavender roses, wrapped in white: a quiet palette for evenings.",
-    stems: "Lavender roses",
+    blurb: "Lilac in every shade of violet, loose and scented: a quiet palette for evenings.",
+    stems: "Lilac · fresh leaves",
     art: { flower: "rose", style: "posy", tint: "#c9b5e6", seed: 13 },
   },
   {
@@ -63,8 +63,8 @@ export const PRODUCTS: Product[] = [
     name: "Velvet",
     category: "boxes",
     price: 95,
-    blurb: "Deep red roses packed tight in a round keepsake box. The classic, done properly.",
-    stems: "Red roses · keepsake box",
+    blurb: "Deep red garden roses, dark and velvety. The classic, done properly.",
+    stems: "Red garden roses",
     art: { flower: "rose", style: "box", tint: "#b8434e", seed: 21 },
   },
   {
@@ -72,8 +72,8 @@ export const PRODUCTS: Product[] = [
     name: "Blush",
     category: "boxes",
     price: 85,
-    blurb: "Pale pink roses in our black hat box, tied with a silk ribbon and a handwritten tag.",
-    stems: "Pink roses · hat box",
+    blurb: "White and blush ranunculus piled high on a wooden flower box, with a handwritten tag.",
+    stems: "Ranunculus · wooden box",
     art: { flower: "rose", style: "box", tint: "#f0b9ae", seed: 34 },
   },
   {
@@ -90,8 +90,8 @@ export const PRODUCTS: Product[] = [
     name: "Maison",
     category: "vases",
     price: 140,
-    blurb: "Blush peonies arranged loose and tall in a glass vase. Yours to keep.",
-    stems: "Peonies · glass vase",
+    blurb: "Pink peonies arranged loose in a stone vase. Yours to keep.",
+    stems: "Peonies · stone vase",
     art: { flower: "peony", style: "vase", tint: "#f0b9ae", seed: 89 },
   },
   {
@@ -99,9 +99,9 @@ export const PRODUCTS: Product[] = [
     name: "Citadel",
     category: "vases",
     price: 75,
-    blurb: "A few stems of violet-blue hydrangea in a simple glass vase, for a desk or a bedside.",
+    blurb: "A stem of pink hydrangea in a simple glass vase, for a desk or a bedside.",
     stems: "Hydrangea · glass vase",
-    art: { flower: "hydrangea", style: "vase", tint: "#b9a3e0", seed: 144 },
+    art: { flower: "hydrangea", style: "vase", tint: "#e9a3c0", seed: 144 },
   },
 ];
 

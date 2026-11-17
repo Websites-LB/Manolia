@@ -6,15 +6,12 @@ import Link from "next/link";
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 
 import { Magnetic } from "@/components/motion/magnetic";
-import { ProductImage } from "@/components/shop/product-image";
-import { EMPTY_STEMS, type Recipe } from "@/lib/custom";
+import { Photo } from "@/components/art/photo";
 import { cn } from "@/lib/utils";
 
 import { ChapterHead, Lane } from "./parts";
 
 gsap.registerPlugin(ScrollTrigger);
-
-const PROPOSAL: Recipe = { stems: { ...EMPTY_STEMS, rose: 6, peony: 2 }, palette: "ivory", greens: ["eucalyptus"], wrap: "ivory" };
 
 function Bubble({ from, children, className }: { from: "you" | "us"; children: ReactNode; className?: string }) {
   return (
@@ -84,14 +81,14 @@ export function AskStory() {
                 <span key={i} className="h-2 w-2 animate-pulse rounded-full bg-ink/35" style={{ animationDelay: `${i * 0.18}s` }} />
               ))}
             </div>
-            <Bubble from="us">Happy birthday to her! We&apos;d tie six ivory garden roses, two peonies and fresh eucalyptus for the scent. Here it is:</Bubble>
+            <Bubble from="us">Happy birthday to her! We&apos;d make her ivory and blush peonies, the most fragrant we have. Here it is:</Bubble>
             <div className="msg flex justify-start">
               <div className="w-[70%] overflow-hidden rounded-[18px] rounded-bl-[6px] bg-white shadow-[0_10px_30px_-18px_rgb(0_0_0/0.35)]">
-                <div className="aspect-[5/4]">
-                  <ProductImage recipe={PROPOSAL} frame={false} />
+                <div className="aspect-[5/4] bg-night">
+                  <Photo src="/art/proposal-peonies.webp" alt="Ivory and blush peonies in a white vase" width={1000} height={800} sizes="360px" fit="cover" />
                 </div>
                 <div className="flex items-center justify-between px-4 py-3">
-                  <p className="display text-[22px] text-ink">Ivory for Mum</p>
+                  <p className="display text-[22px] text-ink">Peonies for Mum</p>
                   <p className="display text-[22px] text-clay">$80</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2 px-3 pb-3">

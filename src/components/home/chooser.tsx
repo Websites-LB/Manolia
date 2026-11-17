@@ -2,14 +2,13 @@
 
 import { FadeUp } from "@/components/motion/fade-up";
 import { SplitWords } from "@/components/motion/split-words";
-import { ProductImage } from "@/components/shop/product-image";
-import { STARTER } from "@/lib/custom";
-import { PRODUCTS } from "@/lib/products";
+import { Photo } from "@/components/art/photo";
 
+const door = (src: string, alt: string) => <Photo src={src} alt={alt} width={1080} height={1350} sizes="(min-width: 768px) 30vw, 100vw" fit="cover" />;
 const DOORS = [
-  { href: "#ready", title: "Ready to *send*", art: <ProductImage product={PRODUCTS[1]} frame={false} /> },
-  { href: "#build", title: "Make your *own*", art: <ProductImage recipe={STARTER} frame={false} /> },
-  { href: "#ask", title: "Let us *choose*", art: <ProductImage brief={{ occasion: "Birthday", palette: "lavender", about: "", budget: 70 }} frame={false} /> },
+  { href: "#ready", title: "Ready to *send*", art: door("/art/door-ready.webp", "Hands holding a dark, wild bouquet") },
+  { href: "#build", title: "Make your *own*", art: door("/art/door-build.webp", "A florist's table with paper, ribbon and stems") },
+  { href: "#ask", title: "Let us *choose*", art: door("/art/door-ask.webp", "Two hands offering a single pink ranunculus") },
 ];
 
 const italic = (t: string) => t.split(/(\*[^*]+\*)/).map((c, i) => (c.startsWith("*") ? <em key={i}>{c.slice(1, -1)}</em> : c));

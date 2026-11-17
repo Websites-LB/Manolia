@@ -37,7 +37,8 @@ This is the house workflow for every site we build, Manolia included.
 - Type: EB Garamond only (served from `src/app/fonts`) on every page, for display, body and labels. Never add a second font.
 - Palette: night forest `#13241a`, paper `#f1ece2`, ink line `#efe6d2`, blush `#f0b9ae`, clay `#b4584d`.
 - Photographs in `public/art` (listed in `src/lib/photos.ts`) replace the painted art where they exist; white
-  flower-head cut-outs are tinted by the painter. They are generated stand-ins until Manolia sends real ones.
+  flower-head cut-outs are tinted by the painter. Product, hero and door photos are public-domain (CC0) stand-ins
+  from Wikimedia Commons (`public/art/CREDITS.md`); only use CC0/public-domain images until Manolia sends its own.
 - The rest of the art is generated code (`src/lib/botanic`): the hero bouquet, the vine that grows down the home page
   (`vine.ts`), the shop plates, the composed bouquet and the butterflies.
   Keep new illustration in the same hand: painted on canvas (`paint.ts`) with cast shadows and scene light,

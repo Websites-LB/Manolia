@@ -49,13 +49,17 @@ translucent edge. There are no outlines. A plate paints itself back to front, a 
 
 ## Photographs (`public/art`, `src/lib/photos.ts`)
 
-Where a photograph exists it replaces the painted version: single stems along the root, the hero bouquet,
-shop pieces, and flower heads. The heads are cut-out photos of white blooms; the painter multiplies them by
-a colour, so the builder composes real flowers in any palette. `photos.ts` lists which files exist; anything
-not listed stays painted, so the site is whole with any subset.
+Where a photograph exists it replaces the painted version: the hero bouquet (its dark backdrop dissolves
+into the night behind the name), every shop piece, the three doors on the home page, the florist's sample
+proposal, and flower heads. The heads are cut-out photos of white blooms; the painter multiplies them by a
+colour, so the builder composes real flowers in any palette. `photos.ts` lists which files exist; anything
+not listed stays painted, so the site is whole with any subset. The builder's bouquet stays painted, because
+it is drawn from the customer's own recipe.
 
-The current photographs are generated stand-ins (Higgsfield, `z_image`), cut off their backdrops with
-`.claude/gen/prep.py`. Replace them with Manolia's own pictures by keeping the same names and sizes.
+The hero, product, door and proposal photographs are public-domain (CC0) pictures from Wikimedia Commons,
+listed with their photographers in `public/art/CREDITS.md`. The stems and flower heads are generated stand-ins
+(Higgsfield, `z_image`), cut off their backdrops with `.claude/gen/prep.py`. Replace any of them with
+Manolia's own pictures by keeping the same names and proportions.
 
 ## Orders and payment
 
