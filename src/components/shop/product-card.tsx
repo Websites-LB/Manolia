@@ -4,7 +4,7 @@ import gsap from "gsap";
 import { useEffect, useRef } from "react";
 
 import { usd, useCart } from "@/lib/cart-store";
-import { CATEGORIES, type Product } from "@/lib/products";
+import type { Product } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 import { ProductImage } from "./product-image";
@@ -15,7 +15,6 @@ import { ProductImage } from "./product-image";
  */
 export function ProductCard({ product, onOpen, className }: { product: Product; onOpen: () => void; className?: string }) {
   const add = useCart((s) => s.add);
-  const cat = CATEGORIES.find((c) => c.id === product.category)?.label;
   const plate = useRef<HTMLDivElement>(null);
   const light = useRef<HTMLDivElement>(null);
 
@@ -57,7 +56,7 @@ export function ProductCard({ product, onOpen, className }: { product: Product; 
       />
       <div style={{ perspective: 1100 }}>
         <div ref={plate} className="relative will-change-transform">
-          <button onClick={onOpen} className="relative block aspect-[4/5] w-full overflow-hidden rounded-[6px]" aria-label={`View ${product.name}`} data-cursor="View">
+          <button onClick={onOpen} className="relative block aspect-[4/5] w-full overflow-hidden rounded-[18px]" aria-label={`View ${product.name}`} data-cursor="View">
             <div className="h-full w-full transition-transform duration-[1600ms] ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.05]">
               <ProductImage product={product} />
             </div>
@@ -67,22 +66,23 @@ export function ProductCard({ product, onOpen, className }: { product: Product; 
               style={{ background: "radial-gradient(42% 34% at 50% 50%, #fff6e6cc, transparent)" }}
             />
           </button>
-          <span className="label pointer-events-none absolute left-4 top-4 rounded-full bg-night/55 px-3 py-1.5 text-line/75 backdrop-blur-md">{cat}</span>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[45%] rounded-b-[18px] bg-gradient-to-t from-night/90 via-night/40 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 md:p-6">
+            <div className="min-w-0">
+              <h3 className="display text-[38px] text-paper md:text-[44px]">{product.name}</h3>
+              <p className="mt-1 truncate text-[15px] italic text-line/65">{product.stems}</p>
+            </div>
+            <span className="display shrink-0 text-[30px] tabular-nums text-blush">{usd(product.price)}</span>
+          </div>
         </div>
       </div>
-      <div className="relative mt-5 flex items-baseline justify-between gap-4">
-        <h3 className="display min-w-0 text-[40px] text-paper md:text-[48px]">{product.name}</h3>
-        <span className="display shrink-0 text-[32px] tabular-nums text-blush">{usd(product.price)}</span>
-      </div>
-      <p className="relative mt-1 text-[15px] text-line/55">{product.stems}</p>
-      <div className="relative mt-5 grid grid-cols-[1fr_auto] gap-2">
-        <button onClick={() => add(product.id)} className="pill justify-center bg-paper text-night hover:bg-blush" aria-label={`Add ${product.name} to bag`}>
-          Add to bag
-        </button>
-        <button onClick={onOpen} className="pill justify-center border border-line/25 text-line/85 hover:border-paper">
-          Details
-        </button>
-      </div>
+      <button
+        onClick={() => add(product.id)}
+        className="relative mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-paper py-3.5 text-[17px] text-night transition-[background-color,opacity,transform] duration-700 ease-[cubic-bezier(.16,1,.3,1)] hover:bg-blush [@media(pointer:fine)]:translate-y-2 [@media(pointer:fine)]:opacity-0 [@media(pointer:fine)]:group-hover:translate-y-0 [@media(pointer:fine)]:group-hover:opacity-100 [@media(pointer:fine)]:focus-visible:opacity-100"
+        aria-label={`Add ${product.name} to bag`}
+      >
+        Add to bag <span className="text-[20px] leading-none">+</span>
+      </button>
     </article>
   );
 }

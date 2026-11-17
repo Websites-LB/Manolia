@@ -38,29 +38,22 @@ export function BuildBanner() {
 
   return (
     <section ref={box} className="gutter relative">
-      <div className="relative grid items-center gap-10 overflow-hidden rounded-[10px] border border-line/10 bg-[#0c1610] p-6 md:grid-cols-[1.1fr_1fr] md:gap-[5vw] md:p-[4vw]">
+      <div className="relative grid items-center gap-10 overflow-hidden rounded-[24px] border border-line/10 bg-[#0c1610] p-6 md:grid-cols-[1.1fr_1fr] md:gap-[5vw] md:p-[4vw]">
         <div className="pointer-events-none absolute -right-[10%] top-1/2 h-[120%] w-[60%] -translate-y-1/2 blur-3xl" style={{ background: "radial-gradient(closest-side, rgb(240 185 174 / 0.16), transparent)" }} />
         <div className="relative">
-          <p className="label text-blush">Made for one person</p>
-          <SplitWords text={"Compose\n*your own.*"} className="display mt-5 text-[clamp(64px,9vw,168px)] text-paper" />
-          <p className="mt-7 max-w-[40ch] text-[15px] leading-relaxed text-line/65">
-            Pick the stems, the colours, the greenery and the wrap. The bouquet draws itself as you go, the price follows, and we tie exactly that the morning you need it.
-          </p>
+          <SplitWords text={"Or make it\n*your own.*"} className="display text-[clamp(64px,9vw,168px)] text-paper" />
+          <p className="mt-6 max-w-[30ch] text-[19px] italic leading-snug text-line/65">Choose the flowers, the colours and the wrap. Watch it come together.</p>
           <div className="mt-9 flex flex-wrap items-center gap-6">
             <Magnetic>
               <Link href="/shop/build" data-cursor="Compose" className="pill bg-blush text-night hover:bg-paper">
-                Start with a stem <span aria-hidden>→</span>
+                Start yours <span aria-hidden>→</span>
               </Link>
             </Magnetic>
-            <span className="label text-line/45">From {usd(12)} · no account needed</span>
           </div>
         </div>
-        <Link href="/shop/build" data-cursor="Compose" aria-label="Compose your own bouquet" className="relative mx-auto block aspect-[4/5] w-full max-w-[460px] overflow-hidden rounded-[6px]">
+        <Link href="/shop/build" data-cursor="Compose" aria-label="Compose your own bouquet" className="relative mx-auto block aspect-[4/5] w-full max-w-[460px] overflow-hidden rounded-[18px]">
           <ProductImage key={i} recipe={idea} mode="load" />
-          <span className="label absolute bottom-4 left-4 right-4 flex justify-between rounded-full bg-night/60 px-4 py-2 text-line/80 backdrop-blur-md">
-            <span>One idea of many</span>
-            <span className="tabular-nums text-blush">{usd(recipePrice(idea))}</span>
-          </span>
+          <span className="display absolute bottom-4 right-4 rounded-full bg-night/65 px-4 py-1.5 text-[24px] tabular-nums text-blush backdrop-blur-md">{usd(recipePrice(idea))}</span>
         </Link>
       </div>
     </section>
