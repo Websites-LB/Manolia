@@ -70,21 +70,18 @@ export function ProductCard({ product, onOpen, className }: { product: Product; 
           <span className="label pointer-events-none absolute left-4 top-4 rounded-full bg-night/55 px-3 py-1.5 text-line/75 backdrop-blur-md">{cat}</span>
         </div>
       </div>
-      <div className="relative mt-5 flex items-end justify-between gap-4">
-        <div className="min-w-0">
-          <h3 className="display text-[40px] text-paper md:text-[52px]">{product.name}</h3>
-          <p className="label mt-2 truncate text-line/45">{product.stems}</p>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-2.5">
-          <span className="display text-[32px] tabular-nums text-blush">{usd(product.price)}</span>
-          <button
-            onClick={() => add(product.id)}
-            className="label rounded-full border border-line/25 px-4 py-2 text-line/85 transition-colors duration-500 hover:border-paper hover:bg-paper hover:text-night"
-            aria-label={`Add ${product.name} to bag`}
-          >
-            Add to bag +
-          </button>
-        </div>
+      <div className="relative mt-5 flex items-baseline justify-between gap-4">
+        <h3 className="display min-w-0 text-[40px] text-paper md:text-[48px]">{product.name}</h3>
+        <span className="display shrink-0 text-[32px] tabular-nums text-blush">{usd(product.price)}</span>
+      </div>
+      <p className="relative mt-1 text-[15px] text-line/55">{product.stems}</p>
+      <div className="relative mt-5 grid grid-cols-[1fr_auto] gap-2">
+        <button onClick={() => add(product.id)} className="pill justify-center bg-paper text-night hover:bg-blush" aria-label={`Add ${product.name} to bag`}>
+          Add to bag
+        </button>
+        <button onClick={onOpen} className="pill justify-center border border-line/25 text-line/85 hover:border-paper">
+          Details
+        </button>
       </div>
     </article>
   );

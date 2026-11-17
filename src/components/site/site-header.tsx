@@ -32,8 +32,9 @@ export function SiteHeader() {
   }, []);
 
   const nav = [
-    ["/shop", "Shop"],
-    ["/#garden", "Flowers"],
+    ["/shop", "Shop", ""],
+    ["/shop/build", "Build your own", "hidden md:inline"],
+    ["/shop#florist", "Ask the florist", "hidden lg:inline"],
   ];
 
   return (
@@ -46,10 +47,10 @@ export function SiteHeader() {
       <Link href="/" aria-label="Manolia home" className="display text-[28px] tracking-[-0.03em] md:text-[32px]">
         Manolia
       </Link>
-      <p className="label absolute left-1/2 hidden -translate-x-1/2 opacity-70 lg:block">The floral boutique — Jbeil, Byblos</p>
+      <p className="label absolute left-1/2 hidden -translate-x-1/2 opacity-70 xl:block">The floral boutique · Jbeil, Byblos</p>
       <nav className="label flex items-center gap-5 md:gap-8">
-        {nav.map(([href, label]) => (
-          <Link key={href} href={href} className={cn("link-u hidden sm:inline", path !== href && "[background-size:0%_1px] hover:[background-size:100%_1px]")}>
+        {nav.map(([href, label, show]) => (
+          <Link key={href} href={href} className={cn("link-u", show, path !== href && "[background-size:0%_1px] hover:[background-size:100%_1px]")}>
             {label}
           </Link>
         ))}

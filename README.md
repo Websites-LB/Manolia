@@ -2,12 +2,14 @@
 
 Website for Manolia, a floral boutique in Jbeil (Byblos), Lebanon: floral design, weddings and events.
 
-- **Home**: a painted bouquet draws itself stem by stem in front of the name (hero). A root pushes out of its
-  cut stems and runs down the whole page as you scroll, and every flower we work with (peony, garden rose,
-  anemone, ranunculus, hydrangea, tulip) sprouts from it with its Latin name, season, meaning, colours and the
-  bouquets it is in. Weddings & events, how to order and the visit grow off the same root. Butterflies drift
-  over everything and shy away from the cursor.
-- **Shop** (`/shop`): every bouquet, box and vase is a painted plate in its own colours (no stock photos) that
+- **Home**: one short story for people who rarely shop online. A painted bouquet draws itself in front of the
+  name (hero), then three big doors answer "how would you like to send flowers?": a ready bouquet, build your
+  own, or let the florist choose. Each opens a chapter: ready bouquets slide past while the page holds (swipe
+  on a phone), the builder's three choices repaint a bouquet as you scroll, and a florist conversation plays
+  itself out. Then how it works and where we deliver, and the door of the boutique. A green vine grows out of
+  the bouquet's stems and runs through every chapter as you scroll, unfurling leaves and opening a flower at
+  each one (`src/lib/botanic/vine.ts`, `src/components/home/vine.tsx`). Butterflies drift over everything.
+- **Shop** (`/shop`): the three ways to order at the top, simple filters, then every bouquet, box and vase is a painted plate in its own colours (no stock photos) that
   leans toward the pointer and glows.
 - **Compose your own** (`/shop/build`): pick stems, palette, greenery and wrap; the bouquet redraws on every
   choice and the price follows. The recipe goes into the bag as composed.
@@ -42,7 +44,7 @@ shadow on what lies under it, then takes its gradient, the light of the scene (f
 translucent edge. There are no outlines. A plate paints itself back to front, a few petals per frame.
 
 - `bouquet.ts` the hero bouquet · `specimen.ts` single plants and shop plates · `custom.ts` the composed bouquet
-- `roots.ts` the taproot, its tapering side roots and root hairs, threaded through each flower after layout
+- `vine.ts` the home page vine: stem, leaves, tendrils and the flowers that open at each chapter
 - `meadow.ts` the footer's flower bed, bulbs and stones, generated at the page's pixel width
 
 ## Photographs (`public/art`, `src/lib/photos.ts`)

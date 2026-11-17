@@ -8,7 +8,6 @@ import { useLayoutEffect, useRef } from "react";
 
 import { Magnetic } from "@/components/motion/magnetic";
 import { SplitWords } from "@/components/motion/split-words";
-import { waLink } from "@/lib/site";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -22,7 +21,7 @@ const BASE = "50% 94.5%";
 /**
  * Opening shot. Night-forest ground, one painted bouquet drawing itself in the middle, the name
  * set enormous behind it so the flowers stand in front of the letters. Copy arrives in sequence.
- * The bouquet leans toward the pointer, and the root that runs down the whole page grows out of its stems.
+ * The bouquet leans toward the pointer, and the vine that runs down the whole page grows out of its stems.
  */
 export function Hero() {
   const root = useRef<HTMLElement>(null);
@@ -99,11 +98,11 @@ export function Hero() {
             <BouquetArt className="h-full w-full" />
           </div>
         </div>
-        {/* the root that runs down the page starts here, at the cut stems */}
-        <span data-anchor data-spread="0.06" className="absolute left-1/2 top-[94.5%] h-px w-px" />
+        {/* the vine that runs down the page starts here, at the cut stems */}
+        <span data-vine className="absolute left-1/2 top-[94.5%] h-px w-px" />
       </div>
-      <span data-via className="absolute bottom-0 left-1/2 hidden h-px w-px md:block" />
-      <span data-via className="absolute right-[14px] top-[74svh] h-px w-px md:hidden" />
+      {/* on a phone the vine leaves the words alone and runs down the right edge */}
+      <span data-vine className="absolute right-[14px] top-[70svh] h-px w-px md:hidden" />
 
       {/* copy */}
       <div ref={copy} className="gutter relative z-10 flex h-full flex-col pb-[33vw] pt-24 md:pb-[24vw] md:pt-32">
@@ -114,18 +113,19 @@ export function Hero() {
               immediate
               delay={0.9}
               stagger={0.045}
-              text="Flowers composed by hand, in one of the *oldest towns on earth.*"
-              className="display text-[34px] leading-[1] text-paper md:text-[44px]"
+              text="Flowers for the people *you love.*"
+              className="display text-[40px] leading-[0.95] text-paper md:text-[56px]"
             />
+            <p className="hero-fade mt-4 max-w-[32ch] text-[16px] leading-snug text-line/70">Tied by hand in Jbeil and brought to their door. Pay online, we do the rest.</p>
             <div className="hero-fade mt-7 flex flex-wrap items-center gap-5">
               <Magnetic>
-                <Link href="/shop" className="pill bg-paper text-night hover:bg-blush" data-cursor="Shop">
-                  Shop bouquets <span aria-hidden>→</span>
-                </Link>
+                <a href="#ready" className="pill bg-paper text-night hover:bg-blush" data-cursor="Choose">
+                  Send flowers <span aria-hidden>→</span>
+                </a>
               </Magnetic>
-              <a href={waLink("Hello Manolia! We're planning a wedding and would love to talk flowers.")} target="_blank" rel="noreferrer" className="label link-u text-line/80">
-                Plan a wedding
-              </a>
+              <Link href="/shop/build" className="label link-u text-line/80" data-cursor="Build">
+                Build your own
+              </Link>
             </div>
           </div>
         </div>
