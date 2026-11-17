@@ -1,15 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Bell, BellOff, Store, Truck, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+
+import { ProductImage } from "@/components/shop/product-image";
 
 import { money, PAY_LABEL, prettyDate, type Order, type OrderStatus } from "@/lib/orders";
+import { PRODUCTS } from "@/lib/products";
 import { cn } from "@/lib/utils";
 
 import { AtelierRequests } from "./atelier-requests";
 import { VoiceCode } from "./voice-code";
 
 const NEXT: Partial<Record<OrderStatus, { to: OrderStatus; label: string; pickup?: string }>> = {
-  new: { to: "arranging", label: "Accept & start arranging" },
+  new: { to: "arranging", label: "Accept and start" },
   arranging: { to: "out", label: "Hand to the driver", pickup: "Ready to collect" },
   out: { to: "done", label: "Delivered", pickup: "Collected" },
 };
@@ -36,53 +40,78 @@ function chime(ctx: AudioContext) {
   });
 }
 
+const Small = ({ children }: { children: ReactNode }) => <dt className="text-[14px] italic text-line/45">{children}</dt>;
+
 function Card({ o, onMove, busy }: { o: Order; onMove: (to: OrderStatus) => void; busy: boolean }) {
   const f = o.fulfilment;
   const pickup = f.type === "pickup";
   const next = NEXT[o.status];
+  const fresh = o.status === "new";
   return (
-    <article className={cn("rounded-[8px] border bg-[#16271d] p-5", o.status === "new" ? "border-blush" : "border-line/12")}>
-      <header className="flex items-baseline justify-between gap-3">
-        <h3 className="display text-[34px] text-paper">{o.ref}</h3>
-        <p className="label text-line/50">
-          {new Date(o.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-          {o.payment.mode === "test" && <span className="ml-2 text-blush">Test</span>}
-        </p>
+    <article
+      className={cn(
+        "relative rounded-[22px] border bg-[#13241a]/90 p-5 backdrop-blur-sm animate-[msg_0.7s_cubic-bezier(.16,1,.3,1)_both]",
+        fresh ? "border-blush/70 shadow-[0_0_0_4px_rgb(240_185_174/0.08),0_40px_80px_-40px_rgb(240_185_174/0.35)]" : "border-line/12",
+      )}
+    >
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="display text-[34px] leading-none text-paper">{o.ref}</h3>
+          <p className="mt-1.5 text-[14px] italic text-line/50">
+            {new Date(o.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+            {o.payment.mode === "test" && <span className="ml-2 text-blush">Test</span>}
+          </p>
+        </div>
+        <p className="display text-[30px] leading-none tabular-nums text-paper">{money(o.total)}</p>
       </header>
 
-      <p className="mt-3 rounded-[4px] bg-night/60 px-3 py-2.5 text-[14px] text-paper">
-        <span className="label mr-2 text-blush">{pickup ? "Pick-up" : "Delivery"}</span>
-        {prettyDate(f.date)}, {f.slot.toLowerCase()}
+      <p className="mt-4 flex items-center gap-2.5 rounded-[14px] bg-night/60 px-3.5 py-3 text-[16px] text-paper">
+        {pickup ? <Store className="h-4 w-4 shrink-0 text-blush" strokeWidth={1.6} /> : <Truck className="h-4 w-4 shrink-0 text-blush" strokeWidth={1.6} />}
+        <span>
+          {prettyDate(f.date)}, <span className="italic text-line/70">{f.slot.toLowerCase()}</span>
+        </span>
       </p>
 
       <ul className="mt-4 space-y-3">
-        {o.lines.map((l) => (
-          <li key={l.id}>
-            <p className="text-[15px] text-paper">
-              <span className="mr-1.5 tabular-nums text-blush">{l.qty} ×</span>
-              {l.name}
-            </p>
-            <p className="mt-0.5 text-[13px] leading-snug text-line/55">{l.detail}</p>
-          </li>
-        ))}
+        {o.lines.map((l) => {
+          const product = PRODUCTS.find((p) => p.id === l.id);
+          return (
+            <li key={l.id} className="flex items-center gap-3">
+              {(product || l.recipe || l.image) && (
+                <div className="h-16 w-[3.25rem] shrink-0 overflow-hidden rounded-[10px]">
+                  <ProductImage product={product} recipe={l.recipe} image={l.image} mode="static" frame={false} />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-[17px] text-paper">
+                  <span className="mr-1.5 tabular-nums text-blush">{l.qty} ×</span>
+                  {l.name}
+                </p>
+                <p className="mt-0.5 text-[14px] italic leading-snug text-line/55">{l.detail}</p>
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
-      <dl className="mt-4 space-y-2 border-t border-line/10 pt-4 text-[13.5px] text-line/75">
-        {o.cardMessage && (
-          <div>
-            <dt className="label text-line/40">Card</dt>
-            <dd className="mt-1 font-serif text-[19px] italic leading-snug text-paper">“{o.cardMessage}”</dd>
-          </div>
-        )}
+      {/* what goes on the card, shown as the card itself */}
+      {o.cardMessage && (
+        <div className="mt-5 -rotate-1 rounded-[6px] bg-paper px-5 py-4 text-ink shadow-[0_18px_40px_-20px_rgb(0_0_0/0.8)]">
+          <p className="text-[13px] italic text-ink/45">Write on the card</p>
+          <p className="mt-1 text-[20px] italic leading-snug">“{o.cardMessage}”</p>
+        </div>
+      )}
+
+      <dl className="mt-5 space-y-3 text-[15px] text-line/80">
         {o.note && (
           <div>
-            <dt className="label text-line/40">Note</dt>
-            <dd className="mt-1">{o.note}</dd>
+            <Small>Note</Small>
+            <dd className="mt-0.5">{o.note}</dd>
           </div>
         )}
         {o.voiceNote && (
           <div>
-            <dt className="label text-line/40">Voice note · print this code on the card</dt>
+            <Small>Voice note: print this code on the card</Small>
             <dd className="mt-2">
               <VoiceCode id={o.voiceNote} />
             </dd>
@@ -90,8 +119,8 @@ function Card({ o, onMove, busy }: { o: Order; onMove: (to: OrderStatus) => void
         )}
         {!pickup && (
           <div>
-            <dt className="label text-line/40">Deliver to</dt>
-            <dd className="mt-1">
+            <Small>Deliver to</Small>
+            <dd className="mt-0.5">
               {f.recipient && <span className="text-paper">{f.recipient} · </span>}
               {f.zone}, {f.address}
               {f.recipientPhone && (
@@ -103,31 +132,36 @@ function Card({ o, onMove, busy }: { o: Order; onMove: (to: OrderStatus) => void
           </div>
         )}
         <div>
-          <dt className="label text-line/40">Customer</dt>
-          <dd className="mt-1">
+          <Small>From</Small>
+          <dd className="mt-0.5">
             {o.customer.name} ·{" "}
             <a className="link-u text-blush" href={`tel:${o.customer.phone}`}>
               {o.customer.phone}
             </a>
+            <span className="ml-2 italic text-line/45">paid by {PAY_LABEL[o.payment.method]}</span>
           </dd>
         </div>
       </dl>
 
-      <footer className="mt-5 flex items-center justify-between gap-3 border-t border-line/10 pt-4">
-        <p className="text-[13px] text-line/60">
-          <span className="display mr-2 text-[26px] tabular-nums text-paper">{money(o.total)}</span>
-          paid · {PAY_LABEL[o.payment.method]}
-        </p>
-        {next && (
-          <button onClick={() => window.confirm(`Cancel order ${o.ref}? The customer will see it as cancelled.`) && onMove("cancelled")} disabled={busy} className="label text-line/40 hover:text-blush">
-            Cancel
-          </button>
-        )}
-      </footer>
       {next && (
-        <button onClick={() => onMove(next.to)} disabled={busy} className={cn("pill mt-4 w-full justify-center disabled:opacity-50", o.status === "new" ? "bg-blush text-night hover:bg-paper" : "bg-paper text-night hover:bg-blush")}>
-          {(pickup && next.pickup) || next.label} <span aria-hidden>→</span>
-        </button>
+        <div className="mt-5 flex items-center gap-3">
+          <button
+            onClick={() => onMove(next.to)}
+            disabled={busy}
+            className={cn("flex flex-1 items-center justify-center gap-2 rounded-full py-3.5 text-[17px] text-night transition-colors duration-500 disabled:opacity-50", fresh ? "bg-blush hover:bg-paper" : "bg-paper hover:bg-blush")}
+          >
+            {(pickup && next.pickup) || next.label} <span aria-hidden>→</span>
+          </button>
+          <button
+            onClick={() => window.confirm(`Cancel order ${o.ref}? The customer will see it as cancelled.`) && onMove("cancelled")}
+            disabled={busy}
+            aria-label={`Cancel order ${o.ref}`}
+            title="Cancel the order"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-line/15 text-line/45 transition-colors duration-500 hover:border-blush hover:text-blush"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       )}
     </article>
   );
@@ -189,59 +223,73 @@ export function AtelierBoard({ open }: { open: boolean }) {
 
   const past = (orders ?? []).filter((o) => o.status === "done" || o.status === "cancelled");
 
+  const list = orders ?? [];
+  const today = new Date().toDateString();
+  const takenToday = list.filter((o) => o.status !== "cancelled" && new Date(o.createdAt).toDateString() === today).reduce((n, o) => n + o.total, 0);
+
   return (
-    <main data-lenis-prevent className="min-h-[100svh] bg-night px-4 pb-24 pt-8 text-line md:px-8">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line/12 pb-6">
+    <main data-lenis-prevent className="relative min-h-[100svh] overflow-x-clip px-4 pb-24 pt-8 text-line md:px-8" style={{ background: "linear-gradient(#13241a, #0f1b13 40%, #0b140f)" }}>
+      <div className="pointer-events-none absolute right-[-15%] top-[-10%] h-[60vh] w-[60vw] blur-3xl" style={{ background: "radial-gradient(closest-side, rgb(240 185 174 / 0.1), transparent)" }} />
+      <header className="relative flex flex-wrap items-end justify-between gap-6">
         <div>
-          <p className="label text-line/45">Manolia · Atelier</p>
-          <h1 className="display mt-2 text-[56px] text-paper md:text-[72px]">
+          <p className="text-[17px] italic text-line/55">Manolia</p>
+          <h1 className="display text-[64px] text-paper md:text-[96px]">
             The <em>bench</em>
           </h1>
         </div>
-        <div className="flex items-center gap-4">
-          {open && <p className="label text-blush">Open in development · set ATELIER_KEY to lock</p>}
-          <button onClick={toggleSound} className={cn("pill border", sound ? "border-blush bg-blush text-night" : "border-line/25 text-line/80 hover:border-line/60")}>
-            {sound ? "Bell is on" : "Turn the bell on"}
+        <div className="flex flex-wrap items-center gap-3">
+          {orders && (
+            <p className="mr-2 text-[16px] italic text-line/55">
+              <span className="display not-italic text-[28px] tabular-nums text-paper">{money(takenToday)}</span> today
+            </p>
+          )}
+          <button
+            onClick={toggleSound}
+            className={cn("flex items-center gap-2 rounded-full border px-5 py-3 text-[16px] transition-colors duration-500", sound ? "border-blush bg-blush text-night" : "border-line/25 text-line/80 hover:border-line/60")}
+          >
+            {sound ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />} {sound ? "Bell is on" : "Turn the bell on"}
           </button>
         </div>
       </header>
+      {open && <p className="relative mt-3 text-[14px] italic text-blush">Open in development: set ATELIER_KEY to lock it.</p>}
 
-      <nav className="mt-6 flex gap-2">
+      <nav className="relative mt-8 flex gap-2">
         {(
           [
-            ["orders", "Orders", (orders ?? []).filter((o) => o.status === "new").length],
+            ["orders", "Orders", list.filter((o) => o.status === "new").length],
             ["requests", "Requests & chat", unread],
           ] as const
         ).map(([id, label, n]) => (
-          <button key={id} onClick={() => setView(id)} className={cn("label flex items-center gap-2.5 rounded-full border px-5 py-3 transition-colors duration-500", view === id ? "border-paper bg-paper text-night" : "border-line/20 text-line/75 hover:border-line/50")}>
+          <button key={id} onClick={() => setView(id)} className={cn("flex items-center gap-2.5 rounded-full border px-5 py-3 text-[17px] transition-colors duration-500", view === id ? "border-paper bg-paper text-night" : "border-line/20 text-line/75 hover:border-line/50")}>
             {label}
-            {n > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blush px-1.5 text-[11px] tabular-nums text-night">{n}</span>}
+            {n > 0 && <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-blush px-1.5 text-[13px] tabular-nums text-night">{n}</span>}
           </button>
         ))}
       </nav>
 
       {/* kept mounted so the bell still rings for a new message while the orders are showing */}
-      <div className={cn(view !== "requests" && "hidden")}>
+      <div className={cn("relative", view !== "requests" && "hidden")}>
         <AtelierRequests onUnread={setUnread} onNew={ring} />
       </div>
 
       {view !== "orders" ? null : orders === null ? (
-        <p className="label mt-16 text-center text-line/40">Loading…</p>
+        <p className="mt-16 text-center text-[17px] italic text-line/40">Loading…</p>
       ) : (
         <>
-          <div className="mt-8 grid gap-6 lg:grid-cols-3">
+          <div className="relative mt-8 grid gap-5 lg:grid-cols-3">
             {COLUMNS.map((c) => {
-              const list = orders.filter((o) => o.status === c.status);
+              const col = orders.filter((o) => o.status === c.status);
               return (
-                <section key={c.status}>
-                  <h2 className="label mb-4 flex items-center justify-between text-line/55">
-                    {c.title} <span className="tabular-nums">{list.length}</span>
+                <section key={c.status} className="rounded-[26px] bg-night/35 p-3 md:p-4">
+                  <h2 className="mb-4 flex items-center justify-between px-2 pt-1">
+                    <span className="display text-[32px] text-paper">{c.title}</span>
+                    <span className={cn("flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[15px] tabular-nums", c.status === "new" && col.length ? "bg-blush text-night" : "bg-line/10 text-line/60")}>{col.length}</span>
                   </h2>
-                  <div className="space-y-4">
-                    {list.map((o) => (
+                  <div className="space-y-3">
+                    {col.map((o) => (
                       <Card key={o.id} o={o} busy={busy === o.id} onMove={(to) => move(o.id, to)} />
                     ))}
-                    {!list.length && <p className="rounded-[8px] border border-dashed border-line/12 px-5 py-10 text-center text-[13px] text-line/35">{c.status === "new" ? "Nothing waiting. New orders appear here by themselves." : "Empty"}</p>}
+                    {!col.length && <p className="rounded-[20px] border border-dashed border-line/12 px-5 py-12 text-center text-[16px] italic text-line/35">{c.status === "new" ? "Nothing waiting. New orders appear here by themselves." : "Empty"}</p>}
                   </div>
                 </section>
               );
@@ -249,16 +297,16 @@ export function AtelierBoard({ open }: { open: boolean }) {
           </div>
 
           {past.length > 0 && (
-            <section className="mt-14">
-              <h2 className="label mb-3 text-line/55">Finished</h2>
-              <ul className="divide-y divide-line/10 border-y border-line/10 text-[13.5px]">
+            <section className="relative mt-12">
+              <h2 className="display mb-4 text-[32px] text-paper">Finished</h2>
+              <ul className="divide-y divide-line/10 overflow-hidden rounded-[20px] border border-line/10 bg-night/35 text-[15px]">
                 {past.map((o) => (
-                  <li key={o.id} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 py-3">
+                  <li key={o.id} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 px-5 py-3.5">
                     <span className="text-paper">
                       {o.ref} · {o.customer.name}
                     </span>
-                    <span className="text-line/55">{o.lines.map((l) => `${l.qty} × ${l.name}`).join(", ")}</span>
-                    <span className={cn("label", o.status === "cancelled" ? "text-blush" : "text-line/45")}>
+                    <span className="italic text-line/55">{o.lines.map((l) => `${l.qty} × ${l.name}`).join(", ")}</span>
+                    <span className={cn(o.status === "cancelled" ? "text-blush" : "text-line/55")}>
                       {o.status === "cancelled" ? "Cancelled" : o.fulfilment.type === "pickup" ? "Collected" : "Delivered"} · {money(o.total)}
                     </span>
                   </li>
