@@ -54,10 +54,11 @@ export function BouquetBuilder({ first, shared }: { first?: Flower; shared?: Rec
   return (
     <div className="relative overflow-x-clip text-line" style={{ background: "linear-gradient(#13241a, #0f1b13 30%, #0b140f)" }}>
       <div className="gutter grid grid-cols-[minmax(0,1fr)] gap-x-[5vw] pb-40 pt-28 md:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] md:pb-32 md:pt-36">
-        {/* the bouquet, redrawn on every choice */}
-        <div className="md:sticky md:top-24 md:h-[calc(100svh-17rem)]">
-          <div className="relative mx-auto h-[50svh] max-w-[580px] md:h-full">
-            <div className="pointer-events-none absolute inset-[-14%] blur-3xl transition-[background] duration-1000" style={{ background: `radial-gradient(closest-side, ${tints[0]}38, transparent)` }} />
+        {/* the bouquet, redrawn on every choice. On a phone it floats at the top while the choices
+            scroll underneath, so every tap shows its effect without scrolling back up. */}
+        <div className="sticky top-0 z-20 -mx-4 bg-[#101d15]/95 px-4 pb-3 pt-3 backdrop-blur-md md:top-24 md:z-auto md:mx-0 md:h-[calc(100svh-17rem)] md:bg-transparent md:p-0 md:backdrop-blur-none">
+          <div className="relative mx-auto h-[36svh] max-w-[580px] md:h-full">
+            <div className="pointer-events-none absolute inset-[-14%] hidden blur-3xl md:block transition-[background] duration-1000" style={{ background: `radial-gradient(closest-side, ${tints[0]}38, transparent)` }} />
             <div key={recipeKey(recipe)} className="relative h-full w-full animate-[settle_0.9s_cubic-bezier(.16,1,.3,1)_both] overflow-hidden rounded-[24px] shadow-[0_70px_120px_-60px_rgb(0_0_0/0.9)]">
               {ok ? (
                 <ProductImage recipe={recipe} mode="static" frame={false} />
@@ -68,7 +69,7 @@ export function BouquetBuilder({ first, shared }: { first?: Flower; shared?: Rec
                   </p>
                 </div>
               )}
-              {ok && <p className="absolute left-5 top-5 rounded-full bg-night/60 px-4 py-1.5 text-[15px] italic text-line/80 backdrop-blur-md">{total} stems</p>}
+              {ok && <p className="absolute bottom-4 left-4 rounded-full bg-night/60 px-4 py-1.5 text-[15px] italic text-line/80 backdrop-blur-md">{total} stems</p>}
             </div>
           </div>
         </div>
