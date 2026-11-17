@@ -16,14 +16,22 @@ import { cn } from "@/lib/utils";
 import { ProductImage } from "./product-image";
 
 /** one head of each flower, drawn small beside its name */
-function Sprig({ kind, tint }: { kind: Flower; tint: string }) {
+function Sprig({ kind, tint, className = "h-14 w-14" }: { kind: Flower; tint: string; className?: string }) {
   const pieces = useMemo(() => {
     const at: [number, number] = [60, kind === "tulip" ? 44 : 60];
     const radius = kind === "tulip" ? 40 : 50;
     return [{ id: "h", tint, sway: 0, strokes: bloom(kind, at, radius, 0, rng(9)), sprite: { kind, at: kind === "tulip" ? ([60, 60] as [number, number]) : at, radius: kind === "tulip" ? 34 : radius, tilt: 0 } }];
   }, [kind, tint]);
-  return <Engraving pieces={pieces} view={{ w: 120, h: 120 }} mode="static" label="" thinOnPhones={false} className="h-14 w-14 shrink-0" />;
+  return <Engraving pieces={pieces} view={{ w: 120, h: 120 }} mode="static" label="" thinOnPhones={false} className={cn("shrink-0", className)} />;
 }
+
+/** a small swatch of each wrap: the paper, the box, the glass */
+const WRAP_LOOK: Record<string, string> = {
+  ivory: "linear-gradient(135deg, #f7f1e6, #e6dcc8)",
+  kraft: "linear-gradient(135deg, #cfa57a, #a87b52)",
+  box: "radial-gradient(circle at 50% 50%, #f0b9ae 0 18%, #161616 19%)",
+  vase: "linear-gradient(135deg, rgb(220 235 240 / 0.55), rgb(160 190 200 / 0.2))",
+};
 
 function Step({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
   return (
@@ -61,7 +69,11 @@ export function BouquetBuilder({ first, shared }: { first?: Flower; shared?: Rec
             <div className="pointer-events-none absolute inset-[-14%] hidden blur-3xl md:block transition-[background] duration-1000" style={{ background: `radial-gradient(closest-side, ${tints[0]}38, transparent)` }} />
             <div key={recipeKey(recipe)} className="relative h-full w-full animate-[settle_0.9s_cubic-bezier(.16,1,.3,1)_both] overflow-hidden rounded-[24px] shadow-[0_70px_120px_-60px_rgb(0_0_0/0.9)]">
               {ok ? (
-                <ProductImage recipe={recipe} mode="static" frame={false} />
+                <div className="h-full w-full scale-[1.04]">
+                  <div className="h-full w-full origin-[50%_90%] animate-[sway_9s_ease-in-out_infinite] motion-reduce:animate-none">
+                    <ProductImage recipe={recipe} mode="static" frame={false} />
+                  </div>
+                </div>
               ) : (
                 <div className="flex h-full w-full items-center justify-center rounded-[24px] border border-dashed border-line/20 text-center">
                   <p className="display text-[40px] text-line/50">
@@ -70,6 +82,11 @@ export function BouquetBuilder({ first, shared }: { first?: Flower; shared?: Rec
                 </div>
               )}
               {ok && <p className="absolute bottom-4 left-4 rounded-full bg-night/60 px-4 py-1.5 text-[15px] italic text-line/80 backdrop-blur-md">{total} stems</p>}
+              {ok && (
+                <p className="display absolute right-4 top-4 rounded-full bg-night/60 px-4 py-1 text-[26px] tabular-nums text-blush backdrop-blur-md">
+                  <NumberFlow value={price} format={{ style: "currency", currency: "USD", maximumFractionDigits: 0 }} />
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -79,29 +96,47 @@ export function BouquetBuilder({ first, shared }: { first?: Flower; shared?: Rec
           <p className="mb-4 mt-5 max-w-[34ch] text-[19px] italic leading-snug text-line/60">Every tap redraws the bouquet. We tie exactly this, the morning you need it.</p>
 
           <Step title="Flowers" hint={`${total} of ${MAX_STEMS}`}>
-            <ul className="grid gap-2.5 2xl:grid-cols-2">
+            <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
               {FLOWERS.map((f, i) => {
                 const n = recipe.stems[f.id];
+                const full = n >= MAX_PER_FLOWER || total >= MAX_STEMS;
                 return (
-                  <li key={f.id} className={cn("flex items-center gap-3 rounded-[18px] border p-3 pr-4 transition-colors duration-500", n ? "border-blush/50 bg-blush/[0.07]" : "border-line/12 bg-[#0e1a12]/60")}>
-                    <Sprig kind={f.id} tint={tints[i % tints.length]} />
-                    <div className="min-w-0 flex-1">
-                      <p className={cn("display text-[26px] leading-none transition-colors duration-500", n ? "text-paper" : "text-line/70")}>{f.name}</p>
-                      <p className="mt-1.5 text-[14px] italic text-line/45">{usd(f.price)} a stem</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className="qty-dark" onClick={() => setStem(f.id, n - 1)} disabled={!n} aria-label={`One ${f.name} less`}>
-                        <Minus className="h-3 w-3" />
-                      </button>
-                      <span className="w-5 text-center text-[17px] tabular-nums text-paper">{n}</span>
-                      <button className="qty-dark" onClick={() => setStem(f.id, n + 1)} disabled={n >= MAX_PER_FLOWER || total >= MAX_STEMS} aria-label={`One ${f.name} more`}>
-                        <Plus className="h-3 w-3" />
-                      </button>
-                    </div>
+                  <li
+                    key={f.id}
+                    className={cn(
+                      "group relative flex flex-col items-center rounded-[22px] border px-3 pb-4 pt-5 text-center transition-[border-color,background-color,transform] duration-500 hover:-translate-y-0.5",
+                      n ? "border-blush/60 bg-blush/[0.08]" : "border-line/12 bg-[#0e1a12]/60 hover:border-line/30",
+                    )}
+                  >
+                    {/* the whole card adds one stem */}
+                    <button onClick={() => setStem(f.id, n + 1)} disabled={full} className="absolute inset-0 rounded-[22px] disabled:cursor-not-allowed" aria-label={`One ${f.name} more`} />
+                    <Sprig kind={f.id} tint={tints[i % tints.length]} className="pointer-events-none h-20 w-20 transition-transform duration-700 ease-[cubic-bezier(.16,1,.3,1)] group-hover:rotate-6 group-hover:scale-110 md:h-24 md:w-24" />
+                    <p className={cn("pointer-events-none display mt-2 text-[24px] leading-none transition-colors duration-500", n ? "text-paper" : "text-line/75")}>{f.name}</p>
+                    <p className="pointer-events-none mt-1.5 text-[14px] italic text-line/45">{usd(f.price)} a stem</p>
+                    {n > 0 && (
+                      <>
+                        <span key={n} className="pointer-events-none absolute right-3 top-3 flex h-8 min-w-8 items-center justify-center rounded-full bg-blush px-2 text-[16px] tabular-nums text-night animate-[msg_0.5s_cubic-bezier(.16,1,.3,1)_both]">
+                          {n}
+                        </span>
+                        <button
+                          onClick={() => setStem(f.id, n - 1)}
+                          className="absolute left-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-line/25 bg-night/60 text-line/85 transition-colors duration-500 hover:border-paper hover:text-paper"
+                          aria-label={`One ${f.name} less`}
+                        >
+                          <Minus className="h-3.5 w-3.5" />
+                        </button>
+                      </>
+                    )}
+                    {!n && (
+                      <span className="pointer-events-none absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-line/20 text-line/60 transition-colors duration-500 group-hover:border-blush group-hover:text-blush">
+                        <Plus className="h-3.5 w-3.5" />
+                      </span>
+                    )}
                   </li>
                 );
               })}
             </ul>
+            <p className="mt-3 text-[15px] italic text-line/45">Tap a flower to add a stem.</p>
           </Step>
 
           <Step title="Colours">
@@ -146,6 +181,7 @@ export function BouquetBuilder({ first, shared }: { first?: Flower; shared?: Rec
                 const on = recipe.wrap === w.id;
                 return (
                   <button key={w.id} onClick={() => setRecipe((r) => ({ ...r, wrap: w.id }))} aria-pressed={on} className={cn("rounded-[18px] border px-5 py-4 text-left transition-colors duration-500", on ? "border-blush/60 bg-blush/[0.08]" : "border-line/12 bg-[#0e1a12]/60 hover:border-line/40")}>
+                    <span className="mb-3 block h-9 w-9 rounded-full ring-1 ring-line/15" style={{ background: WRAP_LOOK[w.id] }} aria-hidden />
                     <span className="display block text-[28px] text-paper">{w.name}</span>
                     <span className="mt-1 block text-[14px] italic text-line/50">{w.price ? `+${usd(w.price)}` : "Included"}</span>
                   </button>
