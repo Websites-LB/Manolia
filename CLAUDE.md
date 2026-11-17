@@ -38,8 +38,8 @@ This is the house workflow for every site we build, Manolia included.
 - Palette: night forest `#13241a`, paper `#f1ece2`, ink line `#efe6d2`, blush `#f0b9ae`, clay `#b4584d`.
 - Photographs in `public/art` (listed in `src/lib/photos.ts`) replace the painted art where they exist; white
   flower-head cut-outs are tinted by the painter. They are generated stand-ins until Manolia sends real ones.
-- The rest of the art is generated code (`src/lib/botanic`): the hero bouquet, the root that grows out of it down the page,
-  the flowers along it, the shop plates, the composed bouquet, the footer's flower bed and the butterflies.
+- The rest of the art is generated code (`src/lib/botanic`): the hero bouquet, the vine that grows down the home page
+  (`vine.ts`), the shop plates, the composed bouquet and the butterflies.
   Keep new illustration in the same hand: painted on canvas (`paint.ts`) with cast shadows and scene light,
   gradient pigment, no outlines, green stems with thickness.
 - Orders never go out as a chat message. Checkout → payment on the provider's page (Whish, card) → the

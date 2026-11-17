@@ -24,7 +24,8 @@ Website for Manolia, a floral boutique in Jbeil (Byblos), Lebanon: floral design
   watches the order go from received to delivered.
 - **Atelier** (`/atelier`): the boutique's bench. Orders: paid orders arrive by themselves with a bell and move
   one step per button. Requests & chat: every florist's-choice conversation, with replies, photos and proposals.
-- **Footer**: a flower bed at dusk, seen from the side, with the facts set into the soil.
+- **Footer**: night ground with one peony stem leaning in from the edge, the ways to order and to reach the
+  boutique in plain words, and the name set across the whole width, rising letter by letter.
 
 ## Stack
 
@@ -45,7 +46,6 @@ translucent edge. There are no outlines. A plate paints itself back to front, a 
 
 - `bouquet.ts` the hero bouquet · `specimen.ts` single plants and shop plates · `custom.ts` the composed bouquet
 - `vine.ts` the home page vine: stem, leaves, tendrils and the flowers that open at each chapter
-- `meadow.ts` the footer's flower bed, bulbs and stones, generated at the page's pixel width
 
 ## Photographs (`public/art`, `src/lib/photos.ts`)
 

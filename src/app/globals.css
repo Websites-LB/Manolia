@@ -48,13 +48,6 @@
     from { opacity: 0; }
     to { opacity: 1; }
   }
-  /* fireflies over the flower bed: a slow wander and a slower pulse */
-  @keyframes firefly {
-    0%, 100% { transform: translate3d(0, 0, 0); opacity: 0; }
-    15% { opacity: 0.9; }
-    50% { transform: translate3d(var(--dx), var(--dy), 0); opacity: 0.35; }
-    80% { opacity: 0.9; }
-  }
   @keyframes cue {
     0% { transform: scaleY(0); transform-origin: top; }
     45% { transform: scaleY(1); transform-origin: top; }
