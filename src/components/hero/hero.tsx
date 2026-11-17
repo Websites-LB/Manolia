@@ -78,7 +78,7 @@ export function Hero() {
     <section ref={root} className="night-glow relative h-[100svh] min-h-[620px] overflow-hidden text-line">
       {/* the name, behind everything */}
       <div ref={word} className="pointer-events-none absolute inset-x-0 bottom-[-6vw] flex justify-center md:bottom-[-8.5vw]" aria-hidden>
-        <div className="display flex overflow-hidden pb-[2vw] text-[37.5vw] leading-[0.8] tracking-[-0.045em] text-paper md:text-[38.5vw]">
+        <div className="display flex overflow-hidden pb-[2vw] text-[32.5vw] leading-[0.8] tracking-[-0.035em] text-paper md:text-[33.5vw]">
           {WORD.split("").map((c, i) => (
             <span key={i} className="hero-letter inline-block will-change-transform">
               {c}

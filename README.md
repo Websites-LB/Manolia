@@ -13,8 +13,8 @@ Website for Manolia, a floral boutique in Jbeil (Byblos), Lebanon: floral design
   leans toward the pointer and glows.
 - **Compose your own** (`/shop/build`): pick stems, palette, greenery and wrap; the bouquet redraws on every
   choice and the price follows. The recipe goes into the bag as composed.
-- **Florist's choice** (`/shop#florist`): for whoever does not know what to send. Occasion, colours, a few words
-  about the person, a budget, a name and a phone number. Sending it opens a conversation (`/request/…`): the
+- **Florist's choice** (`/shop#florist`): for whoever does not know what to send. One short card: the occasion in
+  their own words, a few words about the person, optional colours, a budget, a name and a phone number. Sending it opens a conversation (`/request/…`): the
   florist writes back, can send photos and a proposal with a price; the customer says yes or asks for a change,
   and pays only then. The agreed proposal goes to the checkout at the agreed price.
 - **Voice note**: at the checkout the sender can record up to 30 seconds. The board shows a QR code to print on
@@ -31,7 +31,7 @@ Website for Manolia, a floral boutique in Jbeil (Byblos), Lebanon: floral design
 Next.js 15 · React 19 · Tailwind CSS 4 · GSAP + ScrollTrigger · Lenis · Radix UI · Framer Motion · Zustand ·
 Number Flow (prices that roll) · Sonner (toasts) · Zod (server validation) · qrcode (voice-note codes)
 
-Type: Instrument Serif only, the face the name is set in. Display, reading text and labels differ by size,
+Type: EB Garamond only, on every page (local variable files, OFL). Display, reading text and labels differ by size,
 case and italics, never by font.
 
 ## The painted botanicals (`src/lib/botanic`)

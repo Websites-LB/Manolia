@@ -7,14 +7,15 @@ import { Toaster } from "@/components/site/toaster-lazy";
 
 import "./globals.css";
 
-// One typeface for the whole site: the one the name is set in. The two files (latin, 400 and italic) are
-// served from our own origin, so there is no third-party request and no network needed to build.
+// One typeface for every page: EB Garamond, a book face cut from Garamond's own 16th-century type, so
+// it reads as printed by hand rather than as a template. Two variable files (latin, upright and italic,
+// 400–800, OFL) served from our own origin: no third-party request and no network needed to build.
 const serif = localFont({
-  variable: "--font-instrument",
+  variable: "--font-serif-face",
   display: "swap",
   src: [
-    { path: "./fonts/InstrumentSerif-Regular.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/InstrumentSerif-Italic.woff2", weight: "400", style: "italic" },
+    { path: "./fonts/EBGaramond.woff2", weight: "400 800", style: "normal" },
+    { path: "./fonts/EBGaramond-Italic.woff2", weight: "400 800", style: "italic" },
   ],
 });
 

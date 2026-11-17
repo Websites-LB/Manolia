@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 
 import { ProductImage } from "@/components/shop/product-image";
 import { useCart } from "@/lib/cart-store";
-import { briefSummary, OCCASIONS, PALETTES } from "@/lib/custom";
+import { briefSummary, occasionLabel, PALETTES } from "@/lib/custom";
 import { money, prettyDate } from "@/lib/orders";
 import type { PublicRequest } from "@/lib/requests";
 
@@ -59,7 +59,7 @@ export function RequestRoom({ initial }: { initial: PublicRequest }) {
     router.push("/checkout");
   }
 
-  const occasion = OCCASIONS.find((o) => o.id === r.brief.occasion)?.name;
+  const occasion = occasionLabel(r.brief.occasion);
   const palette = r.brief.palette === "surprise" ? "Florist's choice" : PALETTES.find((p) => p.id === r.brief.palette)?.name;
 
   return (

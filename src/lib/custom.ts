@@ -113,18 +113,16 @@ export function cleanRecipe(input: unknown): Recipe | null {
  * and what to spend. That opens a conversation with the florist (see requests.ts), who proposes
  * something; nothing is paid until the customer says yes. Budget steps are placeholders.
  */
-export type OccasionId = "birthday" | "love" | "thanks" | "getwell" | "baby" | "sympathy" | "because";
-export type Brief = { occasion: OccasionId; palette: PaletteId | "surprise"; about: string; budget: number };
+/** The occasion is written by the customer in their own words ("my mum's birthday"). */
+export type Brief = { occasion: string; palette: PaletteId | "surprise"; about: string; budget: number };
 
-export const OCCASIONS: { id: OccasionId; name: string }[] = [
-  { id: "birthday", name: "Birthday" },
-  { id: "love", name: "Love" },
-  { id: "thanks", name: "Thank you" },
-  { id: "getwell", name: "Get well" },
-  { id: "baby", name: "New baby" },
-  { id: "sympathy", name: "Sympathy" },
-  { id: "because", name: "Just because" },
-];
+/** a few ideas shown under the field, tapped to fill it */
+export const OCCASION_IDEAS = ["Birthday", "Anniversary", "Thank you", "New baby", "Get well", "Just because"];
+export const OCCASION_MAX = 80;
+
+/** Requests saved before the occasion was typed carry an id; show those as words. */
+const LEGACY: Record<string, string> = { birthday: "Birthday", love: "Love", thanks: "Thank you", getwell: "Get well", baby: "New baby", sympathy: "Sympathy", because: "Just because" };
+export const occasionLabel = (o: string) => LEGACY[o] ?? o;
 export const BUDGETS = [45, 70, 100, 150];
 export const BUDGET_MIN = 30;
 export const BUDGET_MAX = 1500;
@@ -133,16 +131,17 @@ export const ABOUT_MAX = 400;
 export function cleanBrief(input: unknown): Brief | null {
   if (!input || typeof input !== "object") return null;
   const v = input as Partial<Brief>;
-  if (!OCCASIONS.some((o) => o.id === v.occasion)) return null;
+  const occasion = typeof v.occasion === "string" ? v.occasion.replace(/\s+/g, " ").trim().slice(0, OCCASION_MAX) : "";
+  if (occasion.length < 2) return null;
   if (v.palette !== "surprise" && !PALETTES.some((p) => p.id === v.palette)) return null;
   if (typeof v.budget !== "number" || !Number.isInteger(v.budget) || v.budget < BUDGET_MIN || v.budget > BUDGET_MAX) return null;
-  return { occasion: v.occasion!, palette: v.palette!, budget: v.budget, about: typeof v.about === "string" ? v.about.trim().slice(0, ABOUT_MAX) : "" };
+  return { occasion, palette: v.palette!, budget: v.budget, about: typeof v.about === "string" ? v.about.trim().slice(0, ABOUT_MAX) : "" };
 }
 
 /** "Birthday · blush colours · “she loves peonies, hates yellow”" */
 export function briefSummary(b: Brief) {
   return [
-    OCCASIONS.find((o) => o.id === b.occasion)?.name,
+    occasionLabel(b.occasion),
     b.palette === "surprise" ? "colours: florist's choice" : `${PALETTES.find((p) => p.id === b.palette)?.name.toLowerCase()} colours`,
     b.about && `“${b.about}”`,
   ]

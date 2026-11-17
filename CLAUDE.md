@@ -34,7 +34,7 @@ This is the house workflow for every site we build, Manolia included.
 
 ## Manolia specifics
 - Stack: Next.js 15 · React 19 · Tailwind 4 · GSAP + ScrollTrigger · Lenis · Framer Motion · Zustand.
-- Type: Instrument Serif only (the logo face) for display, body and labels. Never add a second font.
+- Type: EB Garamond only (served from `src/app/fonts`) on every page, for display, body and labels. Never add a second font.
 - Palette: night forest `#13241a`, paper `#f1ece2`, ink line `#efe6d2`, blush `#f0b9ae`, clay `#b4584d`.
 - Photographs in `public/art` (listed in `src/lib/photos.ts`) replace the painted art where they exist; white
   flower-head cut-outs are tinted by the painter. They are generated stand-ins until Manolia sends real ones.

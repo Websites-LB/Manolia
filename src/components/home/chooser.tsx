@@ -9,7 +9,7 @@ import { PRODUCTS } from "@/lib/products";
 const DOORS = [
   { href: "#ready", title: "Ready to *send*", art: <ProductImage product={PRODUCTS[1]} frame={false} /> },
   { href: "#build", title: "Make your *own*", art: <ProductImage recipe={STARTER} frame={false} /> },
-  { href: "#ask", title: "Let us *choose*", art: <ProductImage brief={{ occasion: "birthday", palette: "lavender", about: "", budget: 70 }} frame={false} /> },
+  { href: "#ask", title: "Let us *choose*", art: <ProductImage brief={{ occasion: "Birthday", palette: "lavender", about: "", budget: 70 }} frame={false} /> },
 ];
 
 const italic = (t: string) => t.split(/(\*[^*]+\*)/).map((c, i) => (c.startsWith("*") ? <em key={i}>{c.slice(1, -1)}</em> : c));

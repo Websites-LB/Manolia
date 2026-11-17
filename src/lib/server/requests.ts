@@ -27,7 +27,7 @@ export async function openRequest(input: unknown): Promise<{ request: FlowerRequ
   const parsed = Open.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message || "Please check the form." };
   const brief = cleanBrief(parsed.data.brief);
-  if (!brief) return { error: "Please choose an occasion, colours and a budget." };
+  if (!brief) return { error: "Please tell us the occasion and pick a budget." };
   const now = new Date().toISOString();
   const { name, phone, email } = parsed.data.customer;
   const request = await requests.create({

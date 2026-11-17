@@ -4,7 +4,7 @@
 /*
  * Manolia — design tokens.
  * Two grounds (night forest, paper), one ink line colour and a few flower tints.
- * Type: one face, Instrument Serif, the one the name is set in. Huge for display, plain for reading,
+ * Type: one face, EB Garamond, on every page. Huge for display, plain for reading,
  * small spaced capitals for labels. Contrast comes from size, case and italics, never a second font.
  */
 @theme {
@@ -60,9 +60,9 @@
 
 /* next/font puts its variables on <body>, so the stacks are inlined rather than read from :root */
 @theme inline {
-  --font-serif: var(--font-instrument), "Times New Roman", serif;
-  --font-sans: var(--font-instrument), "Times New Roman", serif;
-  --font-mono: var(--font-instrument), "Times New Roman", serif;
+  --font-serif: var(--font-serif-face), "Times New Roman", serif;
+  --font-sans: var(--font-serif-face), "Times New Roman", serif;
+  --font-mono: var(--font-serif-face), "Times New Roman", serif;
 }
 
 @layer base {
@@ -73,8 +73,8 @@
     text-rendering: optimizeLegibility;
   }
   body {
-    font-family: var(--font-instrument), "Times New Roman", serif;
-    /* Instrument Serif has a low x-height: this sets reading text by its x-height, so every small size
+    font-family: var(--font-serif-face), "Times New Roman", serif;
+    /* EB Garamond has a small x-height: this sets reading text by its x-height, so every small size
        stays as legible as before without touching each one. Display type opts out below. */
     font-size-adjust: 0.5;
     background: var(--color-paper);
@@ -100,7 +100,7 @@
 @layer components {
   /* tiny monospaced labels: the second voice of the type system */
   .label {
-    font-family: var(--font-instrument), "Times New Roman", serif;
+    font-family: var(--font-serif-face), "Times New Roman", serif;
     font-size: 12.5px;
     line-height: 1.4;
     letter-spacing: 0.11em;
@@ -108,13 +108,13 @@
   }
   /* huge display serif */
   .display {
-    font-family: var(--font-instrument), "Times New Roman", serif;
+    font-family: var(--font-serif-face), "Times New Roman", serif;
     font-weight: 400;
-    letter-spacing: -0.035em;
-    line-height: 0.88;
+    letter-spacing: -0.025em;
+    line-height: 0.92;
     font-size-adjust: none;
   }
-  .display em { font-style: italic; letter-spacing: -0.02em; }
+  .display em { font-style: italic; letter-spacing: -0.015em; }
 
   .h-section { font-size: clamp(44px, 7.2vw, 128px); }
   .gutter { padding-inline: clamp(16px, 3.4vw, 56px); }
@@ -139,7 +139,7 @@
     gap: 0.75rem;
     border-radius: 999px;
     padding: 1rem 1.6rem;
-    font-family: var(--font-instrument), "Times New Roman", serif;
+    font-family: var(--font-serif-face), "Times New Roman", serif;
     font-size: 13px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -250,3 +250,21 @@
 }
 .vine [data-on] .vine-bloom-glow,
 .vine [data-on] .vine-heart { opacity: 1; }
+
+@layer components {
+  /* a plain, roomy text box on paper: easy to see and to tap */
+  .input {
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid color-mix(in oklab, var(--color-ink) 14%, transparent);
+    background: #fffdf8;
+    padding: 0.85rem 1rem;
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--color-ink);
+    outline: none;
+    transition: border-color 0.5s var(--ease-out-expo), box-shadow 0.5s var(--ease-out-expo);
+  }
+  .input:focus { border-color: var(--color-ink); box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-blush) 45%, transparent); }
+  .input::placeholder { color: color-mix(in oklab, var(--color-ink) 38%, transparent); }
+}
