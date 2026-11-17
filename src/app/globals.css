@@ -273,3 +273,22 @@
   .input:focus { border-color: var(--color-ink); box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-blush) 45%, transparent); }
   .input::placeholder { color: color-mix(in oklab, var(--color-ink) 38%, transparent); }
 }
+
+@layer components {
+  /* the same roomy text box, on the night ground */
+  .input-dark {
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid color-mix(in oklab, var(--color-line) 16%, transparent);
+    background: color-mix(in oklab, var(--color-night) 70%, transparent);
+    padding: 0.85rem 1rem;
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--color-paper);
+    color-scheme: dark;
+    outline: none;
+    transition: border-color 0.5s var(--ease-out-expo), box-shadow 0.5s var(--ease-out-expo);
+  }
+  .input-dark:focus { border-color: var(--color-blush); box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-blush) 22%, transparent); }
+  .input-dark::placeholder { color: color-mix(in oklab, var(--color-line) 38%, transparent); }
+}

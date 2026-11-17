@@ -59,30 +59,30 @@ export function VoiceNote({ value, onChange }: { value: string; onChange: (id: s
 
   if (!can) return null;
   return (
-    <div className="mt-5 rounded-[8px] border border-ink/12 p-5">
+    <div className="rounded-[16px] border border-line/12 bg-night/40 p-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="max-w-[38ch]">
-          <p className="display text-[28px]">
+          <p className="display text-[26px] text-paper">
             Or say it <em>out loud</em>
           </p>
-          <p className="mt-1.5 text-[13px] leading-snug text-ink/55">Record up to {MAX} seconds. We print a small code on the card; they scan it and hear your voice.</p>
+          <p className="mt-1 text-[14px] italic leading-snug text-line/50">Up to {MAX} seconds. They scan the card and hear your voice.</p>
         </div>
         {value ? (
-          <button type="button" onClick={() => onChange("")} className="label flex items-center gap-2 text-ink/55 hover:text-clay">
+          <button type="button" onClick={() => onChange("")} className="flex items-center gap-2 text-[15px] text-line/55 hover:text-blush">
             <Trash2 className="h-3.5 w-3.5" /> Remove
           </button>
         ) : state === "recording" ? (
-          <button type="button" onClick={() => rec.current?.stop()} className="pill bg-clay text-paper">
+          <button type="button" onClick={() => rec.current?.stop()} className="flex items-center gap-2 rounded-full bg-clay px-5 py-2.5 text-[16px] text-paper">
             <Square className="h-3 w-3 fill-current" /> Stop · <span className="tabular-nums">{left}s</span>
           </button>
         ) : (
-          <button type="button" onClick={start} disabled={state === "saving"} className="pill border border-ink/20 text-ink hover:border-night hover:bg-night hover:text-paper disabled:opacity-50">
+          <button type="button" onClick={start} disabled={state === "saving"} className="flex items-center gap-2 rounded-full border border-line/25 px-5 py-2.5 text-[16px] text-line transition-colors duration-500 hover:border-paper hover:bg-paper hover:text-night disabled:opacity-50">
             <Mic className="h-3.5 w-3.5" /> {state === "saving" ? "Saving…" : "Record a message"}
           </button>
         )}
       </div>
       {state === "recording" && (
-        <div className="mt-4 h-px w-full overflow-hidden bg-ink/10">
+        <div className="mt-4 h-px w-full overflow-hidden bg-line/15">
           <div className="h-full bg-clay transition-[width] duration-1000 ease-linear" style={{ width: `${((MAX - left) / MAX) * 100}%` }} />
         </div>
       )}
