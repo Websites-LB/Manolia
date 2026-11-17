@@ -11,7 +11,7 @@
  */
 export const HERO_PHOTO = true;
 export const STEM_PHOTOS: string[] = ["peony", "rose", "ranunculus"];
-export const HEAD_PHOTOS: string[] = ["rose"];
+export const HEAD_PHOTOS: string[] = ["rose", "peony", "ranunculus", "anemone", "hydrangea", "tulip"];
 export const PRODUCT_PHOTOS: string[] = ["jbeil-morning", "old-souk", "first-dance", "lavender-hour", "velvet-box", "blush-box", "harbour-blue", "maison", "citadel"];
 
 export const stemPhoto = (kind: string) => (STEM_PHOTOS.includes(kind) ? `/art/stem-${kind}.webp` : null);

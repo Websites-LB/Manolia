@@ -1,6 +1,6 @@
 # Photograph credits
 
-Every photograph listed here is in the public domain (CC0), taken from Wikimedia Commons, where most were
+Every photograph listed here is in the public domain (CC0 or marked public domain), taken from Wikimedia Commons, where most were
 uploaded from Unsplash when Unsplash released its pictures under CC0. No permission or credit is required; the
 photographers are listed anyway, with thanks. They were cropped and compressed for the site.
 
@@ -22,3 +22,11 @@ They are stand-ins until Manolia sends photographs of its own work: replace a fi
 | product-harbour-blue.webp | [Deep blue hydrangea (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Deep_blue_hydrangea_(Unsplash).jpg) | Gaetano Cessati | CC0 |
 | product-maison.webp | [Peony vase (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Peony_vase_(Unsplash).jpg) | Alexandra Seinet | CC0 |
 | product-citadel.webp | [Alisa Anton 2016-09-22 (Unsplash pVfvdZZ2pnc).jpg](https://commons.wikimedia.org/wiki/File:Alisa_Anton_2016-09-22_(Unsplash_pVfvdZZ2pnc).jpg) | Alisa Anton | CC0 |
+| head-peony.webp | [White Peony II.jpg](https://commons.wikimedia.org/wiki/File:White_Peony_II.jpg) | ChickenFreak | Public domain |
+| head-tulip.webp | [Yellow tulip (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Yellow_tulip_(Unsplash).jpg) | Evgen Bril' | CC0 |
+| head-anemone.webp | [Purple and white flower with a yellow center false rue anemone flower.jpg](https://commons.wikimedia.org/wiki/File:Purple_and_white_flower_with_a_yellow_center_false_rue_anemone_flower.jpg) | Barnes Dr Thomas G, U.S. Fish and Wildlife Service | Public domain |
+| head-hydrangea.webp | [White hydrangea flowers.png](https://commons.wikimedia.org/wiki/File:White_hydrangea_flowers.png) | Eden Aviv | CC0 |
+| head-ranunculus.webp | [Ready to bloom (Unsplash).jpg](https://commons.wikimedia.org/wiki/File:Ready_to_bloom_(Unsplash).jpg) | Anette Grolle | CC0 |
+
+The head-*.webp files are single blooms cut off their backgrounds and turned white, so the bouquet builder
+can tint them to any palette. head-rose.webp is a generated stand-in.
